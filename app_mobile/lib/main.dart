@@ -1,42 +1,63 @@
-import 'package:app_mobile/features/avisos/ui/avisos_page.dart';
-import 'package:app_mobile/features/incidencias/ui/incidencias_page.dart';
-import 'package:app_mobile/features/inicio/ui/inicio_page.dart';
+import 'package:app_mobile/core/service/login_service.dart';
+import 'package:app_mobile/core/service/token_storage.dart';
+import 'package:app_mobile/features/login/ui/bloc/login_page_bloc.dart';
 import 'package:app_mobile/features/login/ui/login_page.dart';
-import 'package:app_mobile/features/pagos/ui/pagos_page.dart';
-import 'package:app_mobile/features/registro/ui/registro_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-void main() {
-  runApp(const MyApp());
+
+void main() async {
+  // A. Asegura que el motor de Flutter esté listo (necesario para el Storage)
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // B. PREPARACIÓN DE DEPENDENCIAS (Inyección manual)
+  // 1. Instanciamos la base de datos segura
+  const secureStorage = FlutterSecureStorage();
+  
+  // 2. Instanciamos nuestro wrapper de storage
+  const tokenStorage = TokenStorage(secureStorage);
+  
+  // 3. Instanciamos el servicio (inyectándole el storage)
+  final loginService = LoginService(tokenStorage);
+
+  // C. Arrancamos la App pasando el servicio
+  runApp(MyApp(loginService: loginService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final LoginService loginService;
 
-  // This widget is the root of your application.
+  const MyApp({super.key, required this.loginService});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Comunidad Vecinal',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
-      home: LoginPage()
+      // DEFINIMOS LA PÁGINA INICIAL
+      home: BlocProvider(
+        // D. Aquí creamos el BLoC y le inyectamos el servicio
+        create: (context) => LoginPageBloc(loginService),
+        child: const LoginPage(),
+      ),
+      // DEFINIMOS LAS RUTAS
+      routes: {
+        // E. Una página "Home" simple para probar que el login funcionó
+        '/home': (context) => const Scaffold(
+          body: Center(
+            child: Text(
+              "¡LOGIN EXITOSO!\nBienvenido al Home", 
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      },
     );
   }
 }
