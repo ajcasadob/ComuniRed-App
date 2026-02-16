@@ -1,8 +1,9 @@
-import 'package:app_mobile/pages/avisos_page.dart';
-import 'package:app_mobile/pages/incidencias_page.dart';
-import 'package:app_mobile/pages/inicio_page.dart';
-import 'package:app_mobile/pages/pagos_page.dart';
-import 'package:app_mobile/pages/registro_page.dart';
+import 'package:app_mobile/features/avisos/ui/avisos_page.dart';
+import 'package:app_mobile/features/incidencias/ui/incidencias_page.dart';
+import 'package:app_mobile/features/inicio/ui/inicio_page.dart';
+import 'package:app_mobile/features/login/ui/login_page.dart';
+import 'package:app_mobile/features/pagos/ui/pagos_page.dart';
+import 'package:app_mobile/features/registro/ui/registro_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: IncidenciasPage(),
+      home: LoginPage()
     );
   }
 }
