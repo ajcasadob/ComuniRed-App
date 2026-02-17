@@ -169,7 +169,7 @@ class _ReservasPageState extends State<ReservasPage> {
                   },
                   children: [
                     TableRow(
-                      backgroundColor: const Color(0xFFF8FAFC),
+                      
                       children: [
                         _buildTableHeader('Instalación'),
                         _buildTableHeader('Fecha'),

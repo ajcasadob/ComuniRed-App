@@ -1,3 +1,4 @@
+import 'package:app_mobile/features/inicio/ui/inicio_page.dart';
 import 'package:app_mobile/features/login/ui/login_page.dart';
 import 'package:app_mobile/features/registro/ui/bloc/register_page_bloc.dart';
 import 'package:flutter/material.dart';

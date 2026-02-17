@@ -1,4 +1,5 @@
 import 'package:app_mobile/features/avisos/ui/avisos_page.dart';
+import 'package:app_mobile/features/inicio/ui/inicio_page.dart';
 import 'package:app_mobile/features/login/ui/bloc/login_page_bloc.dart';
 import 'package:app_mobile/features/login/widgets/login_form.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
           if (state is LoginPageSuccess) {
             Navigator.pushReplacement(
               context, 
-              MaterialPageRoute(builder: (context)=> const AvisosPage()));
+              MaterialPageRoute(builder: (context)=> const InicioPage()));
           } else if (state is LoginPageError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
