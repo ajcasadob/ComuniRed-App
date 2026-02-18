@@ -11,129 +11,65 @@ class IncidenciasPage extends StatefulWidget {
 class _IncidenciasPageState extends State<IncidenciasPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Gestión de Incidencias',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF111827),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Reporta y gestiona problemas de la comunidad',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.add, color: Colors.white, size: 20),
-                label: Text(
-                  'Nueva Incidencia',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111827),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(child: _buildStatusCounter('Pendientes', '1')),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStatusCounter('En Proceso', '1')),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStatusCounter('Resueltas', '0')),
-              ],
-            ),
-            const SizedBox(height: 32),
-            _buildIncidenceCard(),
-            const SizedBox(height: 100), // Space for bottom nav
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      centerTitle: false,
-      title: Row(
+    // ✅ Sin Scaffold, sin AppBar, sin BottomNav
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
+          Text(
+            'Gestión de Incidencias',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
               color: const Color(0xFF111827),
-              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.business, color: Colors.white, size: 20),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Comunidad Vecinal',
+          const SizedBox(height: 4),
+          Text(
+            'Reporta y gestiona problemas de la comunidad',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.add, color: Colors.white, size: 20),
+              label: Text(
+                'Nueva Incidencia',
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-              Text(
-                '3B',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF6B7280),
+                  color: Colors.white,
                 ),
               ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF111827),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              Expanded(child: _buildStatusCounter('Pendientes', '1')),
+              const SizedBox(width: 12),
+              Expanded(child: _buildStatusCounter('En Proceso', '1')),
+              const SizedBox(width: 12),
+              Expanded(child: _buildStatusCounter('Resueltas', '0')),
             ],
           ),
+          const SizedBox(height: 32),
+          _buildIncidenceCard(),
+          const SizedBox(height: 20), // ✅ reducido, ya no hay BottomNav propio
         ],
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.person_outline, color: Color(0xFF4B5563), size: 20),
-          ),
-        ),
-      ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(color: const Color(0xFFF3F4F6), height: 1),
       ),
     );
   }
@@ -250,10 +186,7 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
           const SizedBox(height: 12),
           Text(
             'La luz del pasillo del tercer piso lleva varios días fundida.',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: const Color(0xFF6B7280),
-            ),
+            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
           ),
           const SizedBox(height: 24),
           _buildInfoGrid(),
@@ -318,65 +251,14 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
     return Column(
       crossAxisAlignment: alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            color: const Color(0xFF9CA3AF),
-          ),
-        ),
+        Text(label,
+            style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
         const SizedBox(height: 2),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF374151),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: const Color(0xFFF3F4F6))),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.home_outlined, 'Inicio', false),
-          _buildNavItem(Icons.calendar_month_outlined, 'Reservas', false),
-          _buildNavItem(Icons.error, 'Incidencias', true),
-          _buildNavItem(Icons.notifications_none, 'Avisos', false),
-          _buildNavItem(Icons.credit_card, 'Pagos', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 9,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.bold,
-            color: isActive ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
-            letterSpacing: -0.5,
-          ),
-        ),
+        Text(value,
+            style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF374151))),
       ],
     );
   }

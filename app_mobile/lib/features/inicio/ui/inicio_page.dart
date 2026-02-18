@@ -20,7 +20,7 @@ class InicioPage extends StatefulWidget {
 
 class _InicioPageState extends State<InicioPage> {
   late InicioPageBloc inicioPageBloc;
-  int _currentIndex = 0; // 👈 controla el tab activo
+  int _currentIndex = 0; 
 
   @override
   void initState() {
@@ -56,16 +56,15 @@ class _InicioPageState extends State<InicioPage> {
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: _buildAppBar(),
-          // 👇 IndexedStack mantiene todas las páginas en memoria
-          // y solo muestra la del índice activo
+          
           body: IndexedStack(
             index: _currentIndex,
             children: [
-              _buildDashboard(),         // index 0 - Inicio
-              const ReservasPage(),      // index 1
-              const IncidenciasPage(),   // index 2
-              const AvisosPage(),        // index 3
-              const PagosPage(),         // index 4
+              _buildDashboard(),
+              const ReservasPage(),
+              const IncidenciasPage(),
+              const AvisosPage(),
+              const PagosPage(),
             ],
           ),
           bottomNavigationBar: _buildBottomNav(),
@@ -428,7 +427,7 @@ class _InicioPageState extends State<InicioPage> {
   }
 
   Widget _buildNavItem(IconData icon, String label, int index) {
-    final isActive = _currentIndex == index; // 👈 calculado dinámicamente
+    final isActive = _currentIndex == index; 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       child: Column(

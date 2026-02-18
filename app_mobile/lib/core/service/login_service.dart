@@ -37,6 +37,7 @@ try{
 
       final loginResponse = LoginResponse.fromJson(responseBody);
         await _tokenStorage.saveToken(loginResponse.token);
+        await _tokenStorage.saveUserId(loginResponse.user.id);
       return loginResponse;
     }else{
       final errorBody = jsonDecode(response.body);

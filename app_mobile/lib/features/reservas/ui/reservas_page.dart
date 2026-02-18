@@ -1,4 +1,11 @@
+import 'package:app_mobile/core/models/reserva_response.dart';
+import 'package:app_mobile/core/service/reserva_service.dart';
+import 'package:app_mobile/core/service/token_storage.dart';
+import 'package:app_mobile/features/reservas/ui/bloc/reserva_page_bloc.dart';
+import 'package:app_mobile/features/reservas/ui/nueva_reserva_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ReservasPage extends StatefulWidget {
@@ -9,216 +16,174 @@ class ReservasPage extends StatefulWidget {
 }
 
 class _ReservasPageState extends State<ReservasPage> {
+  late ReservaPageBloc reservaPageBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    const secureStorage = FlutterSecureStorage();
+    final tokenStorage = TokenStorage(secureStorage);
+    final reservaService = ReservaService(tokenStorage);
+    reservaPageBloc = ReservaPageBloc(reservaService);
+    reservaPageBloc.add(GetReservas());
+  }
+
+  @override
+  void dispose() {
+    reservaPageBloc.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(8),
+    return BlocProvider.value(
+      value: reservaPageBloc,
+      child: BlocListener<ReservaPageBloc, ReservaPageState>(
+        listener: (context, state) {
+
+          // ✅ Refresca la lista y muestra snackbar al crear
+          if (state is ReservaPageCreada) {
+            reservaPageBloc.add(GetReservas());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Reserva creada correctamente'),
+                backgroundColor: Colors.green,
               ),
-              child: const Icon(Icons.apartment, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Comunidad Vecinal',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  '3B',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[400],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.person_outline, color: Colors.grey),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Colors.grey[100],
-            height: 1,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Reserva de Instalaciones',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            );
+          }
+
+          if (state is ReservaPageError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Gestiona las reservas de las áreas comunes',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            );
+          }
+        },
+        child: BlocBuilder<ReservaPageBloc, ReservaPageState>(
+          builder: (context, state) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  // Título
+                  Text('Reserva de Instalaciones',
+                      style: GoogleFonts.inter(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text('Gestiona las reservas de las áreas comunes',
+                      style: GoogleFonts.inter(
+                          fontSize: 14, color: Colors.grey[500])),
+                  const SizedBox(height: 24),
+
+                  // ✅ Sin await, el BlocListener gestiona el refresco
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                NuevaReservaPage(bloc: reservaPageBloc),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('Nueva Reserva',
+                          style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white)),
+                    ),
                   ),
-                ),
-                child: Text(
-                  'Nueva Reserva',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                  const SizedBox(height: 32),
+
+                  // Grid instalaciones
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.2,
+                    children: [
+                      _buildFacilityItem('Pista de Pádel 1', Icons.sports_tennis),
+                      _buildFacilityItem('Pista de Pádel 2', Icons.sports_tennis),
+                      _buildFacilityItem('Mesa de Ping Pong', Icons.sports_kabaddi),
+                      _buildFacilityItem('Sala Gourmet', Icons.restaurant),
+                      _buildFacilityItem('Gimnasio', Icons.fitness_center),
+                    ],
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.2,
-              children: [
-                _buildFacilityItem('Pista de Pádel 1', Icons.sports_tennis),
-                _buildFacilityItem('Pista de Pádel 2', Icons.sports_tennis),
-                _buildFacilityItem('Mesa de Ping Pong', Icons.sports_kabaddi), // closest icon
-                _buildFacilityItem('Sala Gourmet', Icons.restaurant),
-                _buildFacilityItem('Gimnasio', Icons.fitness_center),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Mis Reservas',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 32),
+
+                  // Header Mis Reservas
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Mis Reservas',
+                          style: GoogleFonts.inter(
+                              fontSize: 14, fontWeight: FontWeight.bold)),
+                      Text('Tus reservas activas',
+                          style: GoogleFonts.inter(
+                              fontSize: 12, color: Colors.grey[400])),
+                    ],
                   ),
-                ),
-                Text(
-                  'Tus reservas activas',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: Colors.grey[400],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey[100]!),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
+                  const SizedBox(height: 16),
+
+                  // Lista dinámica
+                  if (state is ReservaPageLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (state is ReservaPageLoaded)
+                    _buildLista(state.reservas)
+                  else
+                    const Center(child: Text('No hay reservas disponibles')),
+
+                  const SizedBox(height: 20),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(2),
-                    1: FlexColumnWidth(2),
-                    2: FlexColumnWidth(1.5),
-                    3: FlexColumnWidth(2),
-                  },
-                  children: [
-                    TableRow(
-                      
-                      children: [
-                        _buildTableHeader('Instalación'),
-                        _buildTableHeader('Fecha'),
-                        _buildTableHeader('Hora'),
-                        _buildTableHeader('Acciones', textAlign: TextAlign.right),
-                      ],
-                    ),
-                    TableRow(
-                      children: [
-                        _buildTableCell('Gimnasio', isMain: true),
-                        _buildTableCell('26/1/2026'),
-                        _buildTableCell('07:00'),
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Text(
-                                'Cancelar',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 100), // Spacing for bottom nav
-          ],
+            );
+          },
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildLista(List<ReservaResponse> reservas) {
+    if (reservas.isEmpty) {
+      return const Center(child: Text('No tienes reservas activas'));
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: reservas.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final reserva = reservas[index];
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.calendar_month),
+            title: Text(reserva.nombreEspacio),
+            subtitle: Text(
+                '${reserva.fechaReserva} · ${reserva.horaInicio} - ${reserva.horaFin}'),
+            trailing: Chip(
+              label: Text(reserva.estado),
+              backgroundColor: reserva.estado == 'pendiente'
+                  ? Colors.orange[100]
+                  : Colors.green[100],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -236,107 +201,17 @@ class _ReservasPageState extends State<ReservasPage> {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: Colors.grey[600], size: 24),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTableHeader(String text, {TextAlign textAlign = TextAlign.left}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Text(
-        text.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey[400],
-          letterSpacing: 0.5,
-        ),
-        textAlign: textAlign,
-      ),
-    );
-  }
-
-  Widget _buildTableCell(String text, {bool isMain = false}) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: isMain ? FontWeight.w500 : FontWeight.normal,
-          color: isMain ? Colors.black : Colors.grey[600],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[100]!)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildNavItem(Icons.home_outlined, 'Inicio', false),
-          _buildNavItem(Icons.calendar_month, 'Reservas', true),
-          _buildNavItem(Icons.error_outline, 'Incidencias', false),
-          _buildNavItem(Icons.notifications_none, 'Avisos', false),
-          _buildNavItem(Icons.credit_card, 'Pagos', false),
+          Icon(icon, color: Colors.grey[600], size: 28),
+          const SizedBox(height: 12),
+          Text(label,
+              style: GoogleFonts.inter(
+                  fontSize: 12, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center),
         ],
       ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          isActive ? icon : icon, // Could use fill icons if available
-          color: isActive ? Colors.black : Colors.grey[400],
-          size: 20,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 9,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive ? Colors.black : Colors.grey[400],
-          ),
-        ),
-      ],
     );
   }
 }

@@ -11,114 +11,58 @@ class AvisosPage extends StatefulWidget {
 class _AvisosPageState extends State<AvisosPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Comunicaciones y Anuncios',
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF111827),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Información importante para la comunidad',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-            const SizedBox(height: 24),
-            _buildNoticeCard(
-              category: 'EVENTO',
-              categoryColor: const Color(0xFF0F172A),
-              date: '5/10/2025',
-              title: 'Reunión de vecinos - 15 de Octubre',
-              content: 'Se convoca reunión ordinaria de vecinos el próximo 15 de octubre a las 19:00h en la sala gourmet. Orden del día: Aprobación de presupuesto de obras y renovación de zonas comunes.',
-              author: 'Admin Principal',
-            ),
-            const SizedBox(height: 16),
-            _buildNoticeCard(
-              category: 'MANTENIMIENTO',
-              categoryColor: const Color(0xFF2563EB),
-              date: '6/10/2025',
-              title: 'Mantenimiento ascensores',
-              content: 'El próximo martes 10 de octubre se realizará el mantenimiento preventivo de los ascensores. Estarán fuera de servicio de 9:00 a 13:00h.',
-              author: 'Admin Principal',
-            ),
-            const SizedBox(height: 16),
-            _buildNoticeCard(
-              category: 'GENERAL',
-              categoryColor: const Color(0xFFE5E7EB),
-              categoryTextColor: const Color(0xFF6B7280),
-              date: '4/10/2025',
-              title: 'Nuevo sistema de reciclaje',
-              content: 'A partir del 1 de noviembre implementaremos un nuevo sistema de reciclaje en la comunidad. Se instalarán contenedores específicos en el sótano. Por favor, separen correctamente los residuos.',
-              author: 'Admin Principal',
-            ),
-            const SizedBox(height: 100), // Space for bottom nav
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      centerTitle: false,
-      title: Row(
+    // ✅ Sin Scaffold, sin AppBar, sin BottomNav
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B), // slate-800
-              borderRadius: BorderRadius.circular(8),
+          Text(
+            'Comunicaciones y Anuncios',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111827),
             ),
-            child: const Icon(Icons.business, color: Colors.white, size: 20),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Comunidad Vecinal',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF111827),
-                ),
-              ),
-              Text(
-                '3B',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF6B7280),
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            'Información importante para la comunidad',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF6B7280),
+            ),
           ),
+          const SizedBox(height: 24),
+          _buildNoticeCard(
+            category: 'EVENTO',
+            categoryColor: const Color(0xFF0F172A),
+            date: '5/10/2025',
+            title: 'Reunión de vecinos - 15 de Octubre',
+            content: 'Se convoca reunión ordinaria de vecinos el próximo 15 de octubre a las 19:00h en la sala gourmet. Orden del día: Aprobación de presupuesto de obras y renovación de zonas comunes.',
+            author: 'Admin Principal',
+          ),
+          const SizedBox(height: 16),
+          _buildNoticeCard(
+            category: 'MANTENIMIENTO',
+            categoryColor: const Color(0xFF2563EB),
+            date: '6/10/2025',
+            title: 'Mantenimiento ascensores',
+            content: 'El próximo martes 10 de octubre se realizará el mantenimiento preventivo de los ascensores. Estarán fuera de servicio de 9:00 a 13:00h.',
+            author: 'Admin Principal',
+          ),
+          const SizedBox(height: 16),
+          _buildNoticeCard(
+            category: 'GENERAL',
+            categoryColor: const Color(0xFFE5E7EB),
+            categoryTextColor: const Color(0xFF6B7280),
+            date: '4/10/2025',
+            title: 'Nuevo sistema de reciclaje',
+            content: 'A partir del 1 de noviembre implementaremos un nuevo sistema de reciclaje en la comunidad. Se instalarán contenedores específicos en el sótano. Por favor, separen correctamente los residuos.',
+            author: 'Admin Principal',
+          ),
+          const SizedBox(height: 20), // ✅ reducido, ya no hay BottomNav propio
         ],
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.person_outline, color: Color(0xFF94A3B8)),
-        ),
-      ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(color: const Color(0xFFF1F5F9), height: 1),
       ),
     );
   }
@@ -213,48 +157,6 @@ class _AvisosPageState extends State<AvisosPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: const Color(0xFFE2E8F0))),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.home_outlined, 'Inicio', false),
-          _buildNavItem(Icons.calendar_month_outlined, 'Reservas', false),
-          _buildNavItem(Icons.error_outline, 'Incidencias', false),
-          _buildNavItem(Icons.notifications, 'Avisos', true),
-          _buildNavItem(Icons.credit_card, 'Pagos', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
-          size: 22,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 10,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
-          ),
-        ),
-      ],
     );
   }
 }
