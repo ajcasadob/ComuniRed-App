@@ -1,4 +1,3 @@
-import 'package:app_mobile/features/avisos/ui/avisos_page.dart';
 import 'package:app_mobile/features/inicio/ui/inicio_page.dart';
 import 'package:app_mobile/features/login/ui/bloc/login_page_bloc.dart';
 import 'package:app_mobile/features/login/widgets/login_form.dart';

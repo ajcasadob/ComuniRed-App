@@ -1,3 +1,4 @@
+import 'package:app_mobile/features/registro/ui/registro_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -35,7 +36,12 @@ class LoginFooter extends StatelessWidget {
       children: [
         Text('¿No tienes cuenta? ', style: GoogleFonts.inter(color: const Color(0xFF6B7280))),
         GestureDetector(
-          onTap: () { /* Navegar a registro */ },
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const RegisterPage()),
+            );
+          },
           child: Text('Regístrate', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
         ),
       ],

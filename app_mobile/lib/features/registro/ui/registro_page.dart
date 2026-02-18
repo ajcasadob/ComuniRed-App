@@ -1,4 +1,3 @@
-import 'package:app_mobile/features/inicio/ui/inicio_page.dart';
 import 'package:app_mobile/features/login/ui/login_page.dart';
 import 'package:app_mobile/features/registro/ui/bloc/register_page_bloc.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +107,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
