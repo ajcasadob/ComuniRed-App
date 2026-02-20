@@ -5,7 +5,6 @@ import 'package:app_mobile/features/inicio/ui/bloc/inicio_page_bloc.dart';
 import 'package:app_mobile/features/reservas/ui/reservas_page.dart';
 import 'package:app_mobile/features/incidencias/ui/incidencias_page.dart';
 import 'package:app_mobile/features/avisos/ui/avisos_page.dart';
-import 'package:app_mobile/features/pagos/ui/pagos_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -19,8 +18,8 @@ class InicioPage extends StatefulWidget {
 }
 
 class _InicioPageState extends State<InicioPage> {
-  late InicioPageBloc inicioPageBloc;
-  int _currentIndex = 0; 
+  late final InicioPageBloc inicioPageBloc;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -56,7 +55,6 @@ class _InicioPageState extends State<InicioPage> {
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: _buildAppBar(),
-          
           body: IndexedStack(
             index: _currentIndex,
             children: [
@@ -64,7 +62,6 @@ class _InicioPageState extends State<InicioPage> {
               const ReservasPage(),
               const IncidenciasPage(),
               const AvisosPage(),
-              const PagosPage(),
             ],
           ),
           bottomNavigationBar: _buildBottomNav(),
@@ -420,22 +417,29 @@ class _InicioPageState extends State<InicioPage> {
           _buildNavItem(Icons.calendar_month_outlined, 'Reservas', 1),
           _buildNavItem(Icons.error_outline_rounded, 'Incidencias', 2),
           _buildNavItem(Icons.notifications_none_rounded, 'Avisos', 3),
-          _buildNavItem(Icons.credit_card_rounded, 'Pagos', 4),
         ],
       ),
     );
   }
 
   Widget _buildNavItem(IconData icon, String label, int index) {
-    final isActive = _currentIndex == index; 
+    final isActive = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        setState(() => _currentIndex = index);
+        // ✅ Recarga el dashboard al volver a Inicio
+        if (index == 0) {
+          inicioPageBloc.add(GetAll());
+        }
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            color: isActive ? const Color(0xFF111827) : const Color(0xFF9CA3AF),
+            color: isActive
+                ? const Color(0xFF111827)
+                : const Color(0xFF9CA3AF),
             size: 22,
           ),
           const SizedBox(height: 4),

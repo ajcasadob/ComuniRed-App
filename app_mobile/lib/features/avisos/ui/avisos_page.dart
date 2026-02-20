@@ -1,4 +1,10 @@
+import 'package:app_mobile/core/models/avisos_response.dart';
+import 'package:app_mobile/core/service/avisos_service.dart';
+import 'package:app_mobile/core/service/token_storage.dart';
+import 'package:app_mobile/features/avisos/bloc/aviso_page_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AvisosPage extends StatefulWidget {
@@ -9,73 +15,144 @@ class AvisosPage extends StatefulWidget {
 }
 
 class _AvisosPageState extends State<AvisosPage> {
+  late final AvisoPageBloc avisoPageBloc;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    const secureStorage = FlutterSecureStorage();
+    final tokenStorage = TokenStorage(secureStorage);
+    final avisosService = AvisosService(tokenStorage);
+    avisoPageBloc = AvisoPageBloc(avisosService);
+    avisoPageBloc.add(GetAvisos());
+    _initialized = true;
+  }
+
+  @override
+  void dispose() {
+    avisoPageBloc.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ✅ Sin Scaffold, sin AppBar, sin BottomNav
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Comunicaciones y Anuncios',
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Información importante para la comunidad',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: const Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildNoticeCard(
-            category: 'EVENTO',
-            categoryColor: const Color(0xFF0F172A),
-            date: '5/10/2025',
-            title: 'Reunión de vecinos - 15 de Octubre',
-            content: 'Se convoca reunión ordinaria de vecinos el próximo 15 de octubre a las 19:00h en la sala gourmet. Orden del día: Aprobación de presupuesto de obras y renovación de zonas comunes.',
-            author: 'Admin Principal',
-          ),
-          const SizedBox(height: 16),
-          _buildNoticeCard(
-            category: 'MANTENIMIENTO',
-            categoryColor: const Color(0xFF2563EB),
-            date: '6/10/2025',
-            title: 'Mantenimiento ascensores',
-            content: 'El próximo martes 10 de octubre se realizará el mantenimiento preventivo de los ascensores. Estarán fuera de servicio de 9:00 a 13:00h.',
-            author: 'Admin Principal',
-          ),
-          const SizedBox(height: 16),
-          _buildNoticeCard(
-            category: 'GENERAL',
-            categoryColor: const Color(0xFFE5E7EB),
-            categoryTextColor: const Color(0xFF6B7280),
-            date: '4/10/2025',
-            title: 'Nuevo sistema de reciclaje',
-            content: 'A partir del 1 de noviembre implementaremos un nuevo sistema de reciclaje en la comunidad. Se instalarán contenedores específicos en el sótano. Por favor, separen correctamente los residuos.',
-            author: 'Admin Principal',
-          ),
-          const SizedBox(height: 20), // ✅ reducido, ya no hay BottomNav propio
-        ],
+    if (!_initialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.black),
+      );
+    }
+
+    return BlocProvider.value(
+      value: avisoPageBloc,
+      child: BlocListener<AvisoPageBloc, AvisoPageState>(
+        listener: (context, state) {
+          if (state is AvisoPageError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${state.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        child: BlocBuilder<AvisoPageBloc, AvisoPageState>(
+          builder: (context, state) {
+            if (state is AvisoPageInitial || state is AvisoPageLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.black),
+              );
+            }
+
+            if (state is AvisoPageError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error al cargar los avisos',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        color: const Color(0xFF374151),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => avisoPageBloc.add(GetAvisos()),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                      ),
+                      child: Text(
+                        'Reintentar',
+                        style: GoogleFonts.inter(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (state is AvisoPageLoaded) {
+              return _buildContent(state.avisos);
+            }
+
+            return const SizedBox();
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildNoticeCard({
-    required String category,
-    required Color categoryColor,
-    Color categoryTextColor = Colors.white,
-    required String date,
-    required String title,
-    required String content,
-    required String author,
-  }) {
+  // ─── CONTENIDO ─────────────────────────────────────────────────────────────
+
+  Widget _buildContent(List<AvisosResponse> avisos) {
+    return RefreshIndicator(
+      color: Colors.black,
+      onRefresh: () async {
+        avisoPageBloc.add(GetAvisos());
+        await avisoPageBloc.stream.firstWhere(
+          (state) => state is AvisoPageLoaded || state is AvisoPageError,
+        );
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Comunicaciones y Anuncios',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Información importante para la comunidad',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ...avisos.map((aviso) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildNoticeCard(aviso),
+                )),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── CARD ──────────────────────────────────────────────────────────────────
+
+  Widget _buildNoticeCard(AvisosResponse aviso) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -98,15 +175,15 @@ class _AvisosPageState extends State<AvisosPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: categoryColor,
+                  color: _getCategoryColor(aviso.tipo),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  category,
+                  aviso.tipo.toUpperCase(),
                   style: GoogleFonts.inter(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: categoryTextColor,
+                    color: _getCategoryTextColor(aviso.tipo),
                   ),
                 ),
               ),
@@ -114,7 +191,7 @@ class _AvisosPageState extends State<AvisosPage> {
               const Icon(Icons.calendar_month, size: 12, color: Color(0xFF94A3B8)),
               const SizedBox(width: 4),
               Text(
-                date,
+                aviso.fechaPublicacion,
                 style: GoogleFonts.inter(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
@@ -125,7 +202,7 @@ class _AvisosPageState extends State<AvisosPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            title,
+            aviso.titulo,
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -134,7 +211,7 @@ class _AvisosPageState extends State<AvisosPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            content,
+            aviso.contenido,
             style: GoogleFonts.inter(
               fontSize: 14,
               color: const Color(0xFF4B5563),
@@ -148,7 +225,7 @@ class _AvisosPageState extends State<AvisosPage> {
               border: Border(top: BorderSide(color: Color(0xFFF8FAFC))),
             ),
             child: Text(
-              'Publicado por $author',
+              'Publicado por Admin #${aviso.autorId}',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 color: const Color(0xFF94A3B8),
@@ -159,4 +236,31 @@ class _AvisosPageState extends State<AvisosPage> {
       ),
     );
   }
+
+  // ─── HELPERS ───────────────────────────────────────────────────────────────
+Color _getCategoryColor(String tipo) {
+  switch (tipo.toLowerCase()) {
+    case 'evento':
+      return const Color(0xFF0F172A);
+    case 'mantenimiento':
+      return const Color(0xFF2563EB);
+    case 'urgente':
+      return const Color(0xFFDC2626);
+    case 'general':
+      return const Color(0xFFE5E7EB);
+    case 'aviso':
+      return const Color(0xFF059669);
+    default:
+      return const Color(0xFF0F172A);
+  }
+}
+
+Color _getCategoryTextColor(String tipo) {
+  switch (tipo.toLowerCase()) {
+    case 'general':
+      return const Color(0xFF6B7280);
+    default:
+      return Colors.white;
+  }
+}
 }

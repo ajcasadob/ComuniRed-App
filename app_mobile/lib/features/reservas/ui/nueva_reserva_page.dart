@@ -1,6 +1,6 @@
 import 'package:app_mobile/core/dtos/reserva_request_dto.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
-import 'package:app_mobile/features/reservas/ui/bloc/reserva_page_bloc.dart';
+import 'package:app_mobile/features/reservas/bloc/reserva_page_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

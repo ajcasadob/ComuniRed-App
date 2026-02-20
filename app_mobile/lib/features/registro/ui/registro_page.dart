@@ -1,5 +1,5 @@
 import 'package:app_mobile/features/login/ui/login_page.dart';
-import 'package:app_mobile/features/registro/ui/bloc/register_page_bloc.dart';
+import 'package:app_mobile/features/registro/bloc/register_page_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';

@@ -1,7 +1,7 @@
 import 'package:app_mobile/core/models/reserva_response.dart';
 import 'package:app_mobile/core/service/reserva_service.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
-import 'package:app_mobile/features/reservas/ui/bloc/reserva_page_bloc.dart';
+import 'package:app_mobile/features/reservas/bloc/reserva_page_bloc.dart';
 import 'package:app_mobile/features/reservas/ui/nueva_reserva_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

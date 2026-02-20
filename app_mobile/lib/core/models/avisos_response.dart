@@ -1,4 +1,4 @@
-class AvisoResponse {
+class AvisosResponse {
   final int id;
   final String titulo;
   final String contenido;
@@ -6,10 +6,10 @@ class AvisoResponse {
   final int autorId;
   final String fechaPublicacion;
   final int activa;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String createdAt;
+  final String updatedAt;
 
-  AvisoResponse({
+  AvisosResponse({
     required this.id,
     required this.titulo,
     required this.contenido,
@@ -21,8 +21,8 @@ class AvisoResponse {
     required this.updatedAt,
   });
 
-  factory AvisoResponse.fromJson(Map<String, dynamic> json) {
-    return AvisoResponse(
+  factory AvisosResponse.fromJson(Map<String, dynamic> json) {
+    return AvisosResponse(
       id: json['id'],
       titulo: json['titulo'],
       contenido: json['contenido'],
@@ -30,8 +30,8 @@ class AvisoResponse {
       autorId: json['autor_id'],
       fechaPublicacion: json['fecha_publicacion'],
       activa: json['activa'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
     );
   }
 
@@ -44,8 +44,8 @@ class AvisoResponse {
       'autor_id': autorId,
       'fecha_publicacion': fechaPublicacion,
       'activa': activa,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }
 }
