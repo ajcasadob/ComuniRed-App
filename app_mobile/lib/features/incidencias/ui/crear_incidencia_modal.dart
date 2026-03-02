@@ -20,6 +20,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
   final _ubicacionController = TextEditingController();
 
   String _categoriaSeleccionada = 'fontaneria';
+  String _prioridadSeleccionada = 'baja'; // ← nuevo
   int? _usuarioId;
   int? _viviendaId;
   bool _loadingUser = true;
@@ -32,6 +33,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     'carpinteria',
     'otro',
   ];
+
+  static const List<String> _prioridades = ['baja', 'media', 'alta']; // ← nuevo
 
   @override
   void initState() {
@@ -78,6 +81,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
               descripcion: _descripcionController.text.trim(),
               ubicacion: _ubicacionController.text.trim(),
               categoria: _categoriaSeleccionada,
+              prioridad: _prioridadSeleccionada, // ← nuevo
               usuarioId: _usuarioId!,
               viviendaId: _viviendaId,
             ),
@@ -93,7 +97,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Incidencia "${state.incidencia.titulo}" creada correctamente'),
+              content: Text(
+                  'Incidencia "${state.incidencia.titulo}" creada correctamente'),
               backgroundColor: Colors.green,
             ),
           );
@@ -112,7 +117,6 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
           final isLoading = state is IncidenciaCreating || _loadingUser;
 
           return Padding(
-            // Sube el modal cuando aparece el teclado
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
@@ -124,7 +128,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ── Handle ──────────────────────────────────────────────
+
+                    // ── Handle ─────────────────────────────────────────────
                     Center(
                       child: Container(
                         width: 40,
@@ -136,6 +141,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                         ),
                       ),
                     ),
+
                     Text(
                       'Nueva Incidencia',
                       style: GoogleFonts.inter(
@@ -145,6 +151,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                       ),
                     ),
                     const SizedBox(height: 20),
+
                     _buildField(
                       label: 'Título',
                       controller: _tituloController,
@@ -153,6 +160,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                           v == null || v.isEmpty ? 'El título es obligatorio' : null,
                     ),
                     const SizedBox(height: 16),
+
                     _buildField(
                       label: 'Descripción',
                       controller: _descripcionController,
@@ -162,6 +170,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                           v == null || v.isEmpty ? 'La descripción es obligatoria' : null,
                     ),
                     const SizedBox(height: 16),
+
                     _buildField(
                       label: 'Ubicación',
                       controller: _ubicacionController,
@@ -170,8 +179,19 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                           v == null || v.isEmpty ? 'La ubicación es obligatoria' : null,
                     ),
                     const SizedBox(height: 16),
-                    _buildDropdown(),
+
+                    // ── Categoría y Prioridad en fila ──────────────────────
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildCategoriaDropdown()),
+                        const SizedBox(width: 12),
+                        Expanded(child: _buildPrioridadDropdown()),
+                      ],
+                    ),
+
                     const SizedBox(height: 28),
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -213,7 +233,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     );
   }
 
-  // ─── WIDGETS ──────────────────────────────────────────────────────────────
+  // ─── WIDGETS ───────────────────────────────────────────────────────────────
 
   Widget _buildField({
     required String label,
@@ -226,14 +246,11 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF374151),
-          ),
-        ),
+        Text(label,
+            style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF374151))),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -243,44 +260,40 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
           style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111827)),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF)),
+            hintStyle:
+                GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF)),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF111827), width: 1.5),
-            ),
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    const BorderSide(color: Color(0xFF111827), width: 1.5)),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.red)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdown() {
+  Widget _buildCategoriaDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Categoría',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF374151),
-          ),
-        ),
+        Text('Categoría',
+            style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF374151))),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _categoriaSeleccionada,
@@ -294,25 +307,75 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                     ),
                   ))
               .toList(),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF111827), width: 1.5),
-            ),
-          ),
+          decoration: _dropdownDecoration(),
         ),
       ],
+    );
+  }
+
+  Widget _buildPrioridadDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Prioridad',
+            style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF374151))),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: _prioridadSeleccionada,
+          onChanged: (value) => setState(() => _prioridadSeleccionada = value!),
+          items: _prioridades
+              .map((p) => DropdownMenuItem(
+                    value: p,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: _getPrioridadColor(p),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Text(
+                          p[0].toUpperCase() + p.substring(1),
+                          style: GoogleFonts.inter(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ))
+              .toList(),
+          decoration: _dropdownDecoration(),
+        ),
+      ],
+    );
+  }
+
+  Color _getPrioridadColor(String prioridad) {
+    switch (prioridad) {
+      case 'alta':  return const Color(0xFFEF4444);
+      case 'media': return const Color(0xFFCA8A04);
+      default:      return const Color(0xFF6B7280);
+    }
+  }
+
+  InputDecoration _dropdownDecoration() {
+    return InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF111827), width: 1.5)),
     );
   }
 }

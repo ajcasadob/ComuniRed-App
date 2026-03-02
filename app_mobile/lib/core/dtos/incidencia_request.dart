@@ -4,6 +4,8 @@ class IncidenciaRequest {
   final String ubicacion;
   final String categoria;
   final String estado;
+  final String prioridad;
+ 
   final int usuarioId;
   final int? viviendaId;
   final DateTime? fechaResolucion;
@@ -14,6 +16,7 @@ class IncidenciaRequest {
     required this.ubicacion,
     required this.categoria,
     this.estado = 'pendiente',
+    this.prioridad = 'baja',
     required this.usuarioId,
     this.viviendaId,
     this.fechaResolucion,
@@ -26,6 +29,7 @@ class IncidenciaRequest {
       'ubicacion': ubicacion,
       'categoria': categoria,
       'estado': estado,
+      'prioridad': prioridad,
       'usuario_id': usuarioId,
       'vivienda_id': viviendaId,
       'fecha_resolucion': fechaResolucion?.toIso8601String(),

@@ -1,3 +1,4 @@
+import 'package:app_mobile/features/registro/ui/registro_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -26,14 +27,11 @@ class LoginForm extends StatelessWidget {
           const SizedBox(height: 200),
 
           // HEADER - Logo y título
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.apartment, color: Colors.white, size: 48),
+          Image.asset(
+            'assets/images/Login.png',
+            height: 90,
+      
+            fit: BoxFit.contain,
           ),
           const SizedBox(height: 16),
           Text(
@@ -198,7 +196,12 @@ class LoginForm extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  // Navegar a registro
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RegisterPage(),
+                    ),
+                  );
                 },
                 child: Text(
                   'Regístrate',

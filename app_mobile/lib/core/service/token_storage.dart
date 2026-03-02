@@ -5,6 +5,7 @@ class TokenStorage {
   static const String _tokenKey = 'token';
   static const String _userIdKey = 'user_id';
   static const String _viviendaIdKey = 'vivienda_id';
+  static const String _nombreKey = 'nombre';
 
   final FlutterSecureStorage _secureStorage;
   const TokenStorage(this._secureStorage);
@@ -52,6 +53,14 @@ Future<int?> getViviendaId() async {
 
 Future<void> deleteViviendaId() async {
   await _secureStorage.delete(key: _viviendaIdKey);
+}
+
+Future<void> saveNombre(String nombre) async {
+  await _secureStorage.write(key: _nombreKey, value: nombre);
+}
+
+Future<String?> getNombre() async {
+  return await _secureStorage.read(key: _nombreKey);
 }
 
 }

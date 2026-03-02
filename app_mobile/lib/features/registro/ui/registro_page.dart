@@ -99,25 +99,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         // HEADER - Logo y título
                         Column(
                           children: [
-                            Container(
-                              width: 64,
+                            Image.asset(
+                              'assets/images/Login.png',
                               height: 64,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.apartment,
-                                color: Colors.white,
-                                size: 40,
-                              ),
                             ),
                             const SizedBox(height: 16),
                             Text(

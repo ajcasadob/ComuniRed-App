@@ -20,6 +20,7 @@ class InicioPage extends StatefulWidget {
 class _InicioPageState extends State<InicioPage> {
   late final InicioPageBloc inicioPageBloc;
   int _currentIndex = 0;
+  String _nombreUsuario = 'Vecino';
 
   @override
   void initState() {
@@ -29,6 +30,14 @@ class _InicioPageState extends State<InicioPage> {
     final inicioService = InicioService(tokenStorage);
     inicioPageBloc = InicioPageBloc(inicioService);
     inicioPageBloc.add(GetAll());
+    _loadNombre(tokenStorage);
+  }
+
+  Future<void> _loadNombre(TokenStorage tokenStorage) async {
+    final nombre = await tokenStorage.getNombre();
+    if (nombre != null && mounted) {
+      setState(() => _nombreUsuario = nombre);
+    }
   }
 
   @override
@@ -53,7 +62,7 @@ class _InicioPageState extends State<InicioPage> {
           }
         },
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFFF3F4F6),
           appBar: _buildAppBar(),
           body: IndexedStack(
             index: _currentIndex,
@@ -70,7 +79,7 @@ class _InicioPageState extends State<InicioPage> {
     );
   }
 
-  // ─── DASHBOARD (index 0) ───────────────────────────────────────────────────
+  // ─── DASHBOARD ─────────────────────────────────────────────────────────────
 
   Widget _buildDashboard() {
     return BlocBuilder<InicioPageBloc, InicioPageState>(
@@ -91,20 +100,14 @@ class _InicioPageState extends State<InicioPage> {
                 Text(
                   'Error al cargar los datos',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: const Color(0xFF374151),
-                  ),
+                      fontSize: 16, color: const Color(0xFF374151)),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => inicioPageBloc.add(GetAll()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                  ),
-                  child: Text(
-                    'Reintentar',
-                    style: GoogleFonts.inter(color: Colors.white),
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                  child: Text('Reintentar',
+                      style: GoogleFonts.inter(color: Colors.white)),
                 ),
               ],
             ),
@@ -113,15 +116,28 @@ class _InicioPageState extends State<InicioPage> {
 
         if (state is InicioPageSuccess) {
           final data = state.inicioResponse;
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWelcomeSection(),
-                _buildStatsGrid(data),
-                _buildFacilitiesOccupation(data.ocupacionInstalaciones),
-                const SizedBox(height: 100),
-              ],
+          return RefreshIndicator(
+            color: Colors.black,
+            onRefresh: () async {
+              inicioPageBloc.add(GetAll());
+              await inicioPageBloc.stream.firstWhere(
+                  (s) => s is InicioPageSuccess || s is InicioPageError);
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWelcomeSection(),
+                  const SizedBox(height: 12),
+                  _buildAccesosRapidos(),
+                  const SizedBox(height: 12),
+                  _buildEstadisticas(data),
+                  const SizedBox(height: 12),
+                  _buildFacilitiesOccupation(data.ocupacionInstalaciones),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           );
         }
@@ -138,24 +154,26 @@ class _InicioPageState extends State<InicioPage> {
       backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: false,
+      automaticallyImplyLeading: false,
       title: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.business, color: Colors.white, size: 20),
+          SizedBox(
+            height: 32,
+            width: 32,
+            child: Image.asset('assets/images/Login.png', fit: BoxFit.contain),
           ),
-          const SizedBox(width: 12),
-          Text(
-            'Comunidad Vecinal',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF111827),
-            ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Comunidad Vecinal',
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111827)),
+              ),
+            ],
           ),
         ],
       ),
@@ -166,20 +184,15 @@ class _InicioPageState extends State<InicioPage> {
             width: 40,
             height: 40,
             decoration: const BoxDecoration(
-              color: Color(0xFFF3F4F6),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person_outline,
-              color: Color(0xFF4B5563),
-              size: 20,
-            ),
+                color: Color(0xFFF3F4F6), shape: BoxShape.circle),
+            child: const Icon(Icons.person_outline,
+                color: Color(0xFF4B5563), size: 20),
           ),
         ),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(color: const Color(0xFFF9FAFB), height: 1),
+        child: Container(color: const Color(0xFFF3F4F6), height: 1),
       ),
     );
   }
@@ -187,84 +200,136 @@ class _InicioPageState extends State<InicioPage> {
   // ─── WELCOME ───────────────────────────────────────────────────────────────
 
   Widget _buildWelcomeSection() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+    return Container(
+      color: Colors.white,
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bienvenido',
+            'Bienvenido, $_nombreUsuario',
             style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF111827),
-              height: 1.1,
-            ),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF111827)),
           ),
           const SizedBox(height: 4),
           Text(
-            'Resumen de tu comunidad',
+            'Resumen de tu actividad',
             style: GoogleFonts.inter(
-              fontSize: 14,
-              color: const Color(0xFF6B7280),
+                fontSize: 13, color: const Color(0xFF6B7280)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── ACCESOS RÁPIDOS ───────────────────────────────────────────────────────
+
+  Widget _buildAccesosRapidos() {
+    return _buildCard(
+      title: 'Accesos Rápidos',
+      subtitle: 'Funciones más utilizadas',
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildAccesoItem(
+              icon: Icons.calendar_month_outlined,
+              label: 'Nueva Reserva',
+              onTap: () => setState(() => _currentIndex = 1),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildAccesoItem(
+              icon: Icons.warning_amber_outlined,
+              label: 'Reportar Incidencia',
+              onTap: () => setState(() => _currentIndex = 2),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAccesoItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF3F4F6)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 28, color: const Color(0xFF1F2937)),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF374151)),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ─── ESTADÍSTICAS ──────────────────────────────────────────────────────────
 
-  Widget _buildStatsGrid(InicioResponse data) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+  Widget _buildEstadisticas(InicioResponse data) {
+    return _buildCard(
+      title: 'Estadísticas',
+      subtitle: 'Resumen general',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'ESTADÍSTICAS',
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF9CA3AF),
-              letterSpacing: 1,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Reservas Activas',
+                  value: '${data.reservasActivas}',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.error_outline_rounded,
+                  label: 'Incidencias Pendientes',
+                  value: '${data.incidenciasPendientes}',
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.4,
+          Row(
             children: [
-              _buildStatCard(
-                label: 'Reservas Activas',
-                value: '${data.reservasActivas}',
-                icon: Icons.calendar_today_rounded,
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.warning_amber_rounded,
+                  label: 'Incidencias Urgentes',
+                  value: '${data.incidenciasUrgentes}',
+                  urgent: data.incidenciasUrgentes > 0,
+                ),
               ),
-              _buildStatCard(
-                label: 'Incidencias Pendientes',
-                value: '${data.incidenciasPendientes}',
-                icon: Icons.error_outline_rounded,
-              ),
-              _buildStatCard(
-                label: 'Incidencias Urgentes',
-                value: '${data.incidenciasUrgentes}',
-                icon: Icons.warning_amber_rounded,
-                urgent: true,
-              ),
-              _buildStatCard(
-                label: 'Tasa de Cobro',
-                value: '${data.tasaCobro}%',
-                icon: Icons.credit_card_rounded,
-              ),
-              _buildStatCard(
-                label: 'Vecinos Registrados',
-                value: '${data.vecinosRegistrados}',
-                icon: Icons.people_outline_rounded,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatItem(
+                  icon: Icons.people_outline_rounded,
+                  label: 'Vecinos Registrados',
+                  value: '${data.vecinosRegistrados}',
+                ),
               ),
             ],
           ),
@@ -273,49 +338,40 @@ class _InicioPageState extends State<InicioPage> {
     );
   }
 
-  Widget _buildStatCard({
+  Widget _buildStatItem({
+    required IconData icon,
     required String label,
     required String value,
-    required IconData icon,
     bool urgent = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: urgent ? const Color(0xFFFEF2F2) : const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: urgent ? const Color(0xFFFECACA) : const Color(0xFFF3F4F6),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            icon,
-            color: urgent ? Colors.red : const Color(0xFF1F2937),
-            size: 24,
+          Icon(icon,
+              size: 20,
+              color: urgent ? Colors.red : const Color(0xFF4B5563)),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: urgent ? Colors.red : const Color(0xFF111827)),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: urgent ? Colors.red : const Color(0xFF111827),
-                ),
-              ),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: const Color(0xFF6B7280),
-                ),
-              ),
-            ],
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+                fontSize: 11, color: const Color(0xFF6B7280)),
           ),
         ],
       ),
@@ -325,38 +381,16 @@ class _InicioPageState extends State<InicioPage> {
   // ─── OCUPACIÓN DE INSTALACIONES ────────────────────────────────────────────
 
   Widget _buildFacilitiesOccupation(List<OcupacionInstalacion> instalaciones) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
+    return _buildCard(
+      title: 'Ocupación de Instalaciones',
+      subtitle: 'Esta semana',
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ocupación de Instalaciones',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF111827),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Esta semana',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: const Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...instalaciones.map(
-            (instalacion) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildOccupationBar(
-                instalacion.nombre,
-                instalacion.porcentaje / 100,
-              ),
-            ),
-          ),
-        ],
+        children: instalaciones
+            .map((i) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _buildOccupationBar(i.nombre, i.porcentaje / 100),
+                ))
+            .toList(),
       ),
     );
   }
@@ -370,18 +404,16 @@ class _InicioPageState extends State<InicioPage> {
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF374151),
-              ),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF374151)),
             ),
             Text(
               '${(progress * 100).toInt()}%',
               style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF111827),
-              ),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF111827)),
             ),
           ],
         ),
@@ -399,15 +431,69 @@ class _InicioPageState extends State<InicioPage> {
     );
   }
 
+  // ─── HELPER CARD ───────────────────────────────────────────────────────────
+
+  Widget _buildCard({
+    IconData? titleIcon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    required Widget child,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  if (titleIcon != null) ...[
+                    Icon(titleIcon, size: 18, color: const Color(0xFF374151)),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF111827)),
+                  ),
+                ],
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                  fontSize: 12, color: const Color(0xFF6B7280)),
+            ),
+          ],
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
   // ─── BOTTOM NAV ────────────────────────────────────────────────────────────
 
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFF3F4F6)),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFF3F4F6))),
       ),
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -427,31 +513,25 @@ class _InicioPageState extends State<InicioPage> {
     return GestureDetector(
       onTap: () {
         setState(() => _currentIndex = index);
-        // ✅ Recarga el dashboard al volver a Inicio
-        if (index == 0) {
-          inicioPageBloc.add(GetAll());
-        }
+        if (index == 0) inicioPageBloc.add(GetAll());
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isActive
-                ? const Color(0xFF111827)
-                : const Color(0xFF9CA3AF),
-            size: 22,
-          ),
+          Icon(icon,
+              color: isActive
+                  ? const Color(0xFF111827)
+                  : const Color(0xFF9CA3AF),
+              size: 22),
           const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-              color: isActive
-                  ? const Color(0xFF111827)
-                  : const Color(0xFF9CA3AF),
-            ),
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive
+                    ? const Color(0xFF111827)
+                    : const Color(0xFF9CA3AF)),
           ),
         ],
       ),
