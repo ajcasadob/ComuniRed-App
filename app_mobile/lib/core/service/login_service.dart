@@ -38,6 +38,7 @@ try{
       final loginResponse = LoginResponse.fromJson(responseBody);
         await _tokenStorage.saveToken(loginResponse.token);
         await _tokenStorage.saveUserId(loginResponse.user.id);
+        await _tokenStorage.saveViviendaId(loginResponse.user.viviendaId);
       return loginResponse;
     }else{
       final errorBody = jsonDecode(response.body);

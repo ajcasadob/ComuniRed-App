@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:app_mobile/core/config/api_constants.dart';
+import 'package:app_mobile/core/dtos/incidencia_request.dart';
 import 'package:app_mobile/core/interface/incidencias_interface.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
@@ -37,4 +38,40 @@ class IncidenciasService implements IncidenciasInterface {
       throw Exception("Error al obtener las incidencias: $e");
     }
   }
+  
+  @override
+  Future<IncidenciasResponse> createIncidencia(IncidenciaRequest request) async {
+   try {
+    final url = "${ApiConstants.baseUrl}/incidencias";
+    final token = await _tokenStorage.getToken();
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final Map<String, dynamic> responseBody = jsonDecode(response.body);
+      return IncidenciasResponse.fromJson(responseBody);
+    } else {
+      final errorBody = jsonDecode(response.body);
+      throw Exception(
+          "Error al crear la incidencia: ${errorBody['message'] ?? 'Error desconocido'}");
+    }
+  } catch (e) {
+    throw Exception("Error al crear la incidencia: $e");
+  }
+
+
+
+
+
+  }
+
+
 }

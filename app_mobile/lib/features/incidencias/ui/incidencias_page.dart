@@ -2,6 +2,7 @@ import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/incidencias_service.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:app_mobile/features/incidencias/ui/bloc/incidencia_page_bloc.dart';
+import 'package:app_mobile/features/incidencias/ui/crear_incidencia_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -38,7 +39,9 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Center(child: CircularProgressIndicator(color: Colors.black));
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.black),
+      );
     }
 
     return BlocProvider.value(
@@ -56,7 +59,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
         },
         child: BlocBuilder<IncidenciaPageBloc, IncidenciaPageState>(
           builder: (context, state) {
-            if (state is IncidenciaPageInitial || state is IncidenciaPageLoading) {
+            if (state is IncidenciaPageInitial ||
+                state is IncidenciaPageLoading) {
               return const Center(
                 child: CircularProgressIndicator(color: Colors.black),
               );
@@ -67,7 +71,11 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Error al cargar las incidencias',
@@ -110,12 +118,18 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
         .where((i) => i.estado.toLowerCase() == 'pendiente')
         .length;
     final int enProceso = incidencias
-        .where((i) => i.estado.toLowerCase() == 'en_proceso' ||
-                      i.estado.toLowerCase() == 'en proceso')
+        .where(
+          (i) =>
+              i.estado.toLowerCase() == 'en_proceso' ||
+              i.estado.toLowerCase() == 'en proceso',
+        )
         .length;
     final int resueltas = incidencias
-        .where((i) => i.estado.toLowerCase() == 'resuelta' ||
-                      i.estado.toLowerCase() == 'resuelto')
+        .where(
+          (i) =>
+              i.estado.toLowerCase() == 'resuelta' ||
+              i.estado.toLowerCase() == 'resuelto',
+        )
         .length;
 
     return RefreshIndicator(
@@ -153,7 +167,24 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () async {
+                  final creada = await showModalBottomSheet<bool>(
+                    context: context,
+                    isScrollControlled:
+                        true,
+                    backgroundColor: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    builder: (_) => BlocProvider.value(
+                      value: incidenciaPageBloc,
+                      child: const CrearIncidenciaModal(),
+                    ),
+                  );
+                  if (creada == true) incidenciaPageBloc.add(GetIncidencias());
+                },
                 icon: const Icon(Icons.add, color: Colors.white, size: 20),
                 label: Text(
                   'Nueva Incidencia',
@@ -176,20 +207,23 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
             Row(
               children: [
                 Expanded(
-                    child: _buildStatusCounter('Pendientes', '$pendientes')),
+                  child: _buildStatusCounter('Pendientes', '$pendientes'),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
-                    child: _buildStatusCounter('En Proceso', '$enProceso')),
+                  child: _buildStatusCounter('En Proceso', '$enProceso'),
+                ),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _buildStatusCounter('Resueltas', '$resueltas')),
+                Expanded(child: _buildStatusCounter('Resueltas', '$resueltas')),
               ],
             ),
             const SizedBox(height: 32),
-            ...incidencias.map((incidencia) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildIncidenceCard(incidencia),
-                )),
+            ...incidencias.map(
+              (incidencia) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildIncidenceCard(incidencia),
+              ),
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -276,7 +310,9 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(4),
@@ -307,7 +343,9 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
           Text(
             incidencia.descripcion,
             style: GoogleFonts.inter(
-                fontSize: 12, color: const Color(0xFF6B7280)),
+              fontSize: 12,
+              color: const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 24),
           Column(
@@ -315,25 +353,28 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
               Row(
                 children: [
                   Expanded(
-                      child: _buildInfoItem(
-                          'Categoría:', incidencia.categoria)),
+                    child: _buildInfoItem('Categoría:', incidencia.categoria),
+                  ),
                   Expanded(
-                      child: _buildInfoItem('Ubicación:', incidencia.ubicacion,
-                          alignRight: true)),
+                    child: _buildInfoItem(
+                      'Ubicación:',
+                      incidencia.ubicacion,
+                      alignRight: true,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
+                  Expanded(child: _buildInfoItem('Estado:', incidencia.estado)),
                   Expanded(
-                      child: _buildInfoItem(
-                          'Estado:', incidencia.estado)),
-                  Expanded(
-                      child: _buildInfoItem(
-                        'Fecha:',
-                        '${incidencia.createdAt.day}/${incidencia.createdAt.month}/${incidencia.createdAt.year}',
-                        alignRight: true,
-                      )),
+                    child: _buildInfoItem(
+                      'Fecha:',
+                      '${incidencia.createdAt.day}/${incidencia.createdAt.month}/${incidencia.createdAt.year}',
+                      alignRight: true,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -379,21 +420,28 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
 
   // ─── HELPERS ───────────────────────────────────────────────────────────────
 
-  Widget _buildInfoItem(String label, String value,
-      {bool alignRight = false}) {
+  Widget _buildInfoItem(String label, String value, {bool alignRight = false}) {
     return Column(
-      crossAxisAlignment:
-          alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignRight
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11, color: const Color(0xFF9CA3AF))),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: const Color(0xFF9CA3AF),
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(value,
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF374151))),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF374151),
+          ),
+        ),
       ],
     );
   }

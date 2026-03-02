@@ -18,3 +18,17 @@ final class IncidenciaPageError extends IncidenciaPageState {
 
   IncidenciaPageError(this.message);
 }
+
+final class IncidenciaCreating extends IncidenciaPageState {}
+
+final class IncidenciaCreated extends IncidenciaPageState {
+  final IncidenciasResponse incidencia;
+
+  IncidenciaCreated(this.incidencia);
+}
+
+final class IncidenciaCreateError extends IncidenciaPageState {
+  final String message;
+
+  IncidenciaCreateError(this.message);
+}
