@@ -2,6 +2,7 @@ import 'package:app_mobile/core/models/inicio_response.dart';
 import 'package:app_mobile/core/service/inicio_service.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:app_mobile/features/inicio/ui/bloc/inicio_page_bloc.dart';
+import 'package:app_mobile/features/perfil/ui/perfil_page.dart';
 import 'package:app_mobile/features/reservas/ui/reservas_page.dart';
 import 'package:app_mobile/features/incidencias/ui/incidencias_page.dart';
 import 'package:app_mobile/features/avisos/ui/avisos_page.dart';
@@ -71,6 +72,7 @@ class _InicioPageState extends State<InicioPage> {
               const ReservasPage(),
               const IncidenciasPage(),
               const AvisosPage(),
+              const PerfilPage(),
             ],
           ),
           bottomNavigationBar: _buildBottomNav(),
@@ -100,14 +102,20 @@ class _InicioPageState extends State<InicioPage> {
                 Text(
                   'Error al cargar los datos',
                   style: GoogleFonts.inter(
-                      fontSize: 16, color: const Color(0xFF374151)),
+                    fontSize: 16,
+                    color: const Color(0xFF374151),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => inicioPageBloc.add(GetAll()),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
-                  child: Text('Reintentar',
-                      style: GoogleFonts.inter(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                  ),
+                  child: Text(
+                    'Reintentar',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
                 ),
               ],
             ),
@@ -121,7 +129,8 @@ class _InicioPageState extends State<InicioPage> {
             onRefresh: () async {
               inicioPageBloc.add(GetAll());
               await inicioPageBloc.stream.firstWhere(
-                  (s) => s is InicioPageSuccess || s is InicioPageError);
+                (s) => s is InicioPageSuccess || s is InicioPageError,
+              );
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -163,33 +172,16 @@ class _InicioPageState extends State<InicioPage> {
             child: Image.asset('assets/images/Login.png', fit: BoxFit.contain),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Comunidad Vecinal',
-                style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF111827)),
-              ),
-            ],
+          Text(
+            'Comunidad Vecinal',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111827),
+            ),
           ),
         ],
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-                color: Color(0xFFF3F4F6), shape: BoxShape.circle),
-            child: const Icon(Icons.person_outline,
-                color: Color(0xFF4B5563), size: 20),
-          ),
-        ),
-      ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(color: const Color(0xFFF3F4F6), height: 1),
@@ -210,15 +202,18 @@ class _InicioPageState extends State<InicioPage> {
           Text(
             'Bienvenido, $_nombreUsuario',
             style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF111827)),
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111827),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Resumen de tu actividad',
             style: GoogleFonts.inter(
-                fontSize: 13, color: const Color(0xFF6B7280)),
+              fontSize: 13,
+              color: const Color(0xFF6B7280),
+            ),
           ),
         ],
       ),
@@ -275,9 +270,10 @@ class _InicioPageState extends State<InicioPage> {
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF374151)),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF374151),
+              ),
             ),
           ],
         ),
@@ -356,22 +352,27 @@ class _InicioPageState extends State<InicioPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon,
-              size: 20,
-              color: urgent ? Colors.red : const Color(0xFF4B5563)),
+          Icon(
+            icon,
+            size: 20,
+            color: urgent ? Colors.red : const Color(0xFF4B5563),
+          ),
           const SizedBox(height: 8),
           Text(
             value,
             style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: urgent ? Colors.red : const Color(0xFF111827)),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: urgent ? Colors.red : const Color(0xFF111827),
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: GoogleFonts.inter(
-                fontSize: 11, color: const Color(0xFF6B7280)),
+              fontSize: 11,
+              color: const Color(0xFF6B7280),
+            ),
           ),
         ],
       ),
@@ -386,10 +387,12 @@ class _InicioPageState extends State<InicioPage> {
       subtitle: 'Esta semana',
       child: Column(
         children: instalaciones
-            .map((i) => Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _buildOccupationBar(i.nombre, i.porcentaje / 100),
-                ))
+            .map(
+              (i) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildOccupationBar(i.nombre, i.porcentaje / 100),
+              ),
+            )
             .toList(),
       ),
     );
@@ -404,16 +407,18 @@ class _InicioPageState extends State<InicioPage> {
             Text(
               label,
               style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF374151)),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF374151),
+              ),
             ),
             Text(
               '${(progress * 100).toInt()}%',
               style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF111827)),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF111827),
+              ),
             ),
           ],
         ),
@@ -463,9 +468,10 @@ class _InicioPageState extends State<InicioPage> {
                   Text(
                     title,
                     style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF111827)),
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF111827),
+                    ),
                   ),
                 ],
               ),
@@ -477,7 +483,9 @@ class _InicioPageState extends State<InicioPage> {
             Text(
               subtitle,
               style: GoogleFonts.inter(
-                  fontSize: 12, color: const Color(0xFF6B7280)),
+                fontSize: 12,
+                color: const Color(0xFF6B7280),
+              ),
             ),
           ],
           const SizedBox(height: 16),
@@ -503,6 +511,7 @@ class _InicioPageState extends State<InicioPage> {
           _buildNavItem(Icons.calendar_month_outlined, 'Reservas', 1),
           _buildNavItem(Icons.error_outline_rounded, 'Incidencias', 2),
           _buildNavItem(Icons.notifications_none_rounded, 'Avisos', 3),
+          _buildNavItem(Icons.person_outline, 'Perfil', 4),
         ],
       ),
     );
@@ -518,20 +527,23 @@ class _InicioPageState extends State<InicioPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon,
-              color: isActive
-                  ? const Color(0xFF111827)
-                  : const Color(0xFF9CA3AF),
-              size: 22),
+          Icon(
+            icon,
+            color: isActive
+                ? const Color(0xFF111827)
+                : const Color(0xFF9CA3AF),
+            size: 22,
+          ),
           const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                color: isActive
-                    ? const Color(0xFF111827)
-                    : const Color(0xFF9CA3AF)),
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive
+                  ? const Color(0xFF111827)
+                  : const Color(0xFF9CA3AF),
+            ),
           ),
         ],
       ),

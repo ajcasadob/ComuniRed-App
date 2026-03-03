@@ -32,3 +32,27 @@ final class IncidenciaCreateError extends IncidenciaPageState {
 
   IncidenciaCreateError(this.message);
 }
+
+final class IncidenciaUpdating extends IncidenciaPageState {}
+
+final class IncidenciaUpdated extends IncidenciaPageState {
+  final IncidenciasResponse incidencia;
+
+  IncidenciaUpdated(this.incidencia);
+}
+
+final class IncidenciaUpdateError extends IncidenciaPageState {
+  final String message;
+
+  IncidenciaUpdateError(this.message);
+}
+
+final class IncidenciaDeleting extends IncidenciaPageState {}
+
+final class IncidenciaDeleted extends IncidenciaPageState {}
+
+final class IncidenciaDeleteError extends IncidenciaPageState {
+  final String message;
+
+  IncidenciaDeleteError(this.message);
+}

@@ -1,4 +1,5 @@
 import 'package:app_mobile/core/dtos/incidencia_request.dart';
+import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:app_mobile/features/incidencias/ui/bloc/incidencia_page_bloc.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CrearIncidenciaModal extends StatefulWidget {
-  const CrearIncidenciaModal({super.key});
+  final IncidenciasResponse? incidencia;
+  const CrearIncidenciaModal({super.key, this.incidencia});
 
   @override
   State<CrearIncidenciaModal> createState() => _CrearIncidenciaModalState();
@@ -15,32 +17,47 @@ class CrearIncidenciaModal extends StatefulWidget {
 
 class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
   final _formKey = GlobalKey<FormState>();
-  final _tituloController = TextEditingController();
-  final _descripcionController = TextEditingController();
-  final _ubicacionController = TextEditingController();
+  late final TextEditingController _tituloController;
+  late final TextEditingController _descripcionController;
+  late final TextEditingController _ubicacionController;
 
-  String _categoriaSeleccionada = 'fontaneria';
-  String _prioridadSeleccionada = 'baja'; // ← nuevo
+  late String _categoriaSeleccionada;
+  late String _prioridadSeleccionada;
   int? _usuarioId;
   int? _viviendaId;
   bool _loadingUser = true;
 
+  bool get _esEdicion => widget.incidencia != null;
+
   static const List<String> _categorias = [
-    'fontaneria',
-    'electricidad',
-    'limpieza',
-    'albanileria',
-    'carpinteria',
-    'otro',
+    'fontaneria', 'electricidad', 'limpieza',
+    'albanileria', 'carpinteria', 'otro',
   ];
 
-  static const List<String> _prioridades = ['baja', 'media', 'alta']; // ← nuevo
+  static const List<String> _prioridades = ['baja', 'media', 'alta'];
 
   @override
-  void initState() {
-    super.initState();
-    _loadIds();
-  }
+void initState() {
+  super.initState();
+  final inc = widget.incidencia;
+  _tituloController = TextEditingController(text: inc?.titulo ?? '');
+  _descripcionController = TextEditingController(text: inc?.descripcion ?? '');
+  _ubicacionController = TextEditingController(text: inc?.ubicacion ?? '');
+
+  // ── Normaliza y valida que el valor exista en la lista ──
+  final categoriaRaw = inc?.categoria.toLowerCase().trim() ?? 'fontaneria';
+  _categoriaSeleccionada = _categorias.contains(categoriaRaw)
+      ? categoriaRaw
+      : 'fontaneria'; // fallback si no coincide
+
+  final prioridadRaw = inc?.prioridad.toLowerCase().trim() ?? 'baja';
+  _prioridadSeleccionada = _prioridades.contains(prioridadRaw)
+      ? prioridadRaw
+      : 'baja'; // fallback si no coincide
+
+  _loadIds();
+}
+
 
   Future<void> _loadIds() async {
     const secureStorage = FlutterSecureStorage();
@@ -48,8 +65,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     final userId = await tokenStorage.getUserId();
     final viviendaId = await tokenStorage.getViviendaId();
     setState(() {
-      _usuarioId = userId;
-      _viviendaId = viviendaId;
+      _usuarioId = widget.incidencia?.usuarioId ?? userId;
+      _viviendaId = widget.incidencia?.viviendaId ?? viviendaId;
       _loadingUser = false;
     });
   }
@@ -74,19 +91,23 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
       return;
     }
 
-    context.read<IncidenciaPageBloc>().add(
-          CreateIncidencia(
-            IncidenciaRequest(
-              titulo: _tituloController.text.trim(),
-              descripcion: _descripcionController.text.trim(),
-              ubicacion: _ubicacionController.text.trim(),
-              categoria: _categoriaSeleccionada,
-              prioridad: _prioridadSeleccionada, // ← nuevo
-              usuarioId: _usuarioId!,
-              viviendaId: _viviendaId,
-            ),
-          ),
-        );
+    final request = IncidenciaRequest(
+      titulo: _tituloController.text.trim(),
+      descripcion: _descripcionController.text.trim(),
+      ubicacion: _ubicacionController.text.trim(),
+      categoria: _categoriaSeleccionada,
+      prioridad: _prioridadSeleccionada,
+      usuarioId: _usuarioId!,
+      viviendaId: _viviendaId,
+    );
+
+    if (_esEdicion) {
+      context.read<IncidenciaPageBloc>().add(
+            UpdateIncidencia(widget.incidencia!.id, request), // ← posicional
+          );
+    } else {
+      context.read<IncidenciaPageBloc>().add(CreateIncidencia(request));
+    }
   }
 
   @override
@@ -103,18 +124,32 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
             ),
           );
         }
-        if (state is IncidenciaCreateError) {
+        if (state is IncidenciaUpdated) {
+          Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: ${state.message}'),
-              backgroundColor: Colors.red,
+              content: Text(
+                  'Incidencia "${state.incidencia.titulo}" actualizada correctamente'),
+              backgroundColor: Colors.green,
             ),
+          );
+        }
+        if (state is IncidenciaCreateError || state is IncidenciaUpdateError) {
+          final message = state is IncidenciaCreateError
+              ? state.message
+              : (state as IncidenciaUpdateError).message;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error: $message'),
+                backgroundColor: Colors.red),
           );
         }
       },
       child: BlocBuilder<IncidenciaPageBloc, IncidenciaPageState>(
         builder: (context, state) {
-          final isLoading = state is IncidenciaCreating || _loadingUser;
+          final isLoading = state is IncidenciaCreating ||
+              state is IncidenciaUpdating ||
+              _loadingUser;
 
           return Padding(
             padding: EdgeInsets.only(
@@ -128,8 +163,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
-                    // ── Handle ─────────────────────────────────────────────
+                    // Handle
                     Center(
                       child: Container(
                         width: 40,
@@ -141,9 +175,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                         ),
                       ),
                     ),
-
                     Text(
-                      'Nueva Incidencia',
+                      _esEdicion ? 'Editar Incidencia' : 'Nueva Incidencia',
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -151,36 +184,34 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     _buildField(
                       label: 'Título',
                       controller: _tituloController,
                       hint: 'Ej: Fuga de agua en portal',
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'El título es obligatorio' : null,
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'El título es obligatorio'
+                          : null,
                     ),
                     const SizedBox(height: 16),
-
                     _buildField(
                       label: 'Descripción',
                       controller: _descripcionController,
                       hint: 'Describe el problema con detalle',
                       maxLines: 3,
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'La descripción es obligatoria' : null,
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'La descripción es obligatoria'
+                          : null,
                     ),
                     const SizedBox(height: 16),
-
                     _buildField(
                       label: 'Ubicación',
                       controller: _ubicacionController,
                       hint: 'Ej: Portal A, Escalera 2...',
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'La ubicación es obligatoria' : null,
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'La ubicación es obligatoria'
+                          : null,
                     ),
                     const SizedBox(height: 16),
-
-                    // ── Categoría y Prioridad en fila ──────────────────────
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -189,9 +220,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                         Expanded(child: _buildPrioridadDropdown()),
                       ],
                     ),
-
                     const SizedBox(height: 28),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -214,7 +243,9 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                                 ),
                               )
                             : Text(
-                                'Crear Incidencia',
+                                _esEdicion
+                                    ? 'Guardar Cambios'
+                                    : 'Crear Incidencia',
                                 style: GoogleFonts.inter(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -233,7 +264,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     );
   }
 
-  // ─── WIDGETS ───────────────────────────────────────────────────────────────
+  // ─── WIDGETS ─────────────────────────────────────────────────────────────
 
   Widget _buildField({
     required String label,
@@ -257,11 +288,12 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
-          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111827)),
+          style:
+              GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111827)),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle:
-                GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF)),
+            hintStyle: GoogleFonts.inter(
+                fontSize: 13, color: const Color(0xFF9CA3AF)),
             filled: true,
             fillColor: Colors.white,
             contentPadding:
@@ -297,7 +329,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _categoriaSeleccionada,
-          onChanged: (value) => setState(() => _categoriaSeleccionada = value!),
+          onChanged: (value) =>
+              setState(() => _categoriaSeleccionada = value!),
           items: _categorias
               .map((cat) => DropdownMenuItem(
                     value: cat,
@@ -325,7 +358,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _prioridadSeleccionada,
-          onChanged: (value) => setState(() => _prioridadSeleccionada = value!),
+          onChanged: (value) =>
+              setState(() => _prioridadSeleccionada = value!),
           items: _prioridades
               .map((p) => DropdownMenuItem(
                     value: p,
@@ -366,7 +400,8 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     return InputDecoration(
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB))),

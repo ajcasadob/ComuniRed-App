@@ -79,4 +79,52 @@ class ReservaService implements ReservaInterface {
     }
   
   }
+  
+  @override
+  Future<void> deleteReserva(int id)async {
+   try {
+    final token = await _tokenStorage.getToken();
+    final response = await http.delete(
+      Uri.parse("$url/$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception("Error al eliminar la reserva: statusCode ${response.statusCode}");
+    }
+  } catch (e) {
+    throw Exception("Error al eliminar la reserva: $e");
+  }
+  }
+  
+  @override
+  Future<ReservaResponse> updateReserva(int id, CrearReservaRequest request) async {
+   try {
+    final token = await _tokenStorage.getToken();
+    final response = await http.put(
+      Uri.parse("$url/$id"),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return ReservaResponse.fromJson(jsonDecode(response.body));
+    } else {
+      final errorBody = jsonDecode(response.body);
+      throw Exception(
+          "Error al actualizar la reserva: ${errorBody['message'] ?? 'Error desconocido'}");
+    }
+  } catch (e) {
+    throw Exception("Error al actualizar la reserva: $e");
+  }
+
+  }
 }

@@ -4,6 +4,7 @@ class IncidenciasResponse {
   final String descripcion;
   final String ubicacion;
   final String categoria;
+  final String prioridad; 
   final String estado;
   final int usuarioId;
   final int viviendaId;
@@ -17,6 +18,7 @@ class IncidenciasResponse {
     required this.descripcion,
     required this.ubicacion,
     required this.categoria,
+    required this.prioridad, 
     required this.estado,
     required this.usuarioId,
     required this.viviendaId,
@@ -32,6 +34,7 @@ class IncidenciasResponse {
       descripcion: json['descripcion'] as String,
       ubicacion: json['ubicacion'] as String,
       categoria: json['categoria'] as String,
+      prioridad: json['prioridad'] as String, // 👈
       estado: json['estado'] as String,
       usuarioId: json['usuario_id'] as int,
       viviendaId: json['vivienda_id'] as int,
@@ -50,6 +53,7 @@ class IncidenciasResponse {
       'descripcion': descripcion,
       'ubicacion': ubicacion,
       'categoria': categoria,
+      'prioridad': prioridad, // 👈
       'estado': estado,
       'usuario_id': usuarioId,
       'vivienda_id': viviendaId,

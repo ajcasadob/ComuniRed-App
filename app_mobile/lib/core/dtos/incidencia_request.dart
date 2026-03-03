@@ -5,7 +5,6 @@ class IncidenciaRequest {
   final String categoria;
   final String estado;
   final String prioridad;
- 
   final int usuarioId;
   final int? viviendaId;
   final DateTime? fechaResolucion;

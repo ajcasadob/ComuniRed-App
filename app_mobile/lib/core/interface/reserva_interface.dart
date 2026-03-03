@@ -4,4 +4,6 @@ import 'package:app_mobile/core/models/reserva_response.dart';
 abstract class ReservaInterface {
   Future<List<ReservaResponse>> getReservas();
   Future<ReservaResponse> crearReserva(CrearReservaRequest request);
+  Future<ReservaResponse> updateReserva(int id, CrearReservaRequest request);
+  Future<void> deleteReserva(int id);
 }

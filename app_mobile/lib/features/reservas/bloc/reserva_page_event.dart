@@ -11,3 +11,18 @@ final class CrearReserva extends ReservaPageEvent{
 
   CrearReserva(this.requestDto);
 }
+
+final class UpdateReserva extends ReservaPageEvent{
+
+  final int id;
+  final CrearReservaRequest requestDto;
+
+  UpdateReserva(this.id, this.requestDto);
+}
+
+final class DeleteReserva extends ReservaPageEvent{
+
+  final int id;
+
+  DeleteReserva(this.id);
+}

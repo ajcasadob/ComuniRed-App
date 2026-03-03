@@ -24,3 +24,27 @@ final class ReservaPageError extends ReservaPageState {
 
   ReservaPageError(this.message);
 }
+
+final class ReservaUpdating extends ReservaPageState {}
+
+final class ReservaUpdated extends ReservaPageState {
+  final ReservaResponse reserva;
+
+  ReservaUpdated(this.reserva);
+}
+
+final class ReservaUpdateError extends ReservaPageState {
+  final String message;
+
+  ReservaUpdateError(this.message);
+}
+
+final class ReservaDeleting extends ReservaPageState {}
+
+final class ReservaDeleted extends ReservaPageState {}
+
+final class ReservaDeleteError extends ReservaPageState {
+  final String message;
+
+  ReservaDeleteError(this.message);
+}

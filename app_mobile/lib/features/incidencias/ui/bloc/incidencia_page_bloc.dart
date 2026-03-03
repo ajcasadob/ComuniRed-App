@@ -33,5 +33,27 @@ final IncidenciasService _incidenciasService;
         emit(IncidenciaCreateError(e.toString()));
       }
     });
+
+    on<UpdateIncidencia>((event, emit) async {
+      emit(IncidenciaUpdating());
+      try {
+        final updated =
+            await _incidenciasService.updateIncidencia(event.id, event.request);
+        emit(IncidenciaUpdated(updated));
+      } catch (e) {
+        emit(IncidenciaUpdateError(e.toString()));
+      }
+    });
+
+    on<DeleteIncidencia>((event, emit) async {
+      emit(IncidenciaDeleting());
+      try {
+        await _incidenciasService.deleteIncidencia(event.id);
+        emit(IncidenciaDeleted());
+      } catch (e) {
+        emit(IncidenciaDeleteError(e.toString()));
+      }
+    });
+
   }
 }

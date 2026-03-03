@@ -1,3 +1,4 @@
+import 'package:app_mobile/features/login/ui/login_page.dart';
 import 'package:app_mobile/features/registro/ui/registro_page.dart';
 import 'package:flutter/material.dart';
 
@@ -16,7 +17,11 @@ class MyApp extends StatelessWidget {
       
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const RegisterPage(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const LoginPage(),
+        '/registro': (context) => const RegisterPage(),
+      },
     );
   }
 }

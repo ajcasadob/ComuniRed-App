@@ -34,6 +34,26 @@ class ReservaPageBloc extends Bloc<ReservaPageEvent, ReservaPageState> {
       }
     });
 
+    on<UpdateReserva>((event, emit) async {
+      emit(ReservaUpdating());
+      try {
+        final updated = await service.updateReserva(event.id, event.requestDto);
+        emit(ReservaUpdated(updated));
+      } catch (e) {
+        emit(ReservaUpdateError(e.toString()));
+      }
+    });
+
+    on<DeleteReserva>((event, emit) async {
+      emit(ReservaDeleting());
+      try {
+        await service.deleteReserva(event.id);
+        emit(ReservaDeleted());
+      } catch (e) {
+        emit(ReservaDeleteError(e.toString()));
+      }
+    });
+
 
   
   }

@@ -72,6 +72,61 @@ class IncidenciasService implements IncidenciasInterface {
 
 
   }
+  
+  @override
+  Future<void> deleteIncidencia(int id) async{
+    try {
+    final url = "${ApiConstants.baseUrl}/incidencias/$id";
+    final token = await _tokenStorage.getToken();
+
+    final response = await http.delete(
+      Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final errorBody = jsonDecode(response.body);
+      throw Exception(
+          "Error al eliminar la incidencia: ${errorBody['message'] ?? 'Error desconocido'}");
+    }
+  } catch (e) {
+    throw Exception("Error al eliminar la incidencia: $e");
+  }
+  }
+  
+  @override
+  Future<IncidenciasResponse> updateIncidencia(int id, IncidenciaRequest request)async {
+
+    try {
+    final url = "${ApiConstants.baseUrl}/incidencias/$id";
+    final token = await _tokenStorage.getToken();
+
+    final response = await http.put(
+      Uri.parse(url),
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode(request.toJson()),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return IncidenciasResponse.fromJson(jsonDecode(response.body));
+    } else {
+      final errorBody = jsonDecode(response.body);
+      throw Exception(
+          "Error al actualizar la incidencia: ${errorBody['message'] ?? 'Error desconocido'}");
+    }
+  } catch (e) {
+    throw Exception("Error al actualizar la incidencia: $e");
+  }
+
+  }
 
 
 }
