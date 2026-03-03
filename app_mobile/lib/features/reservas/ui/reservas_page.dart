@@ -18,6 +18,7 @@ class ReservasPage extends StatefulWidget {
 
 class _ReservasPageState extends State<ReservasPage> {
   late ReservaPageBloc reservaPageBloc;
+  int? _currentUserId; 
 
   @override
   void initState() {
@@ -26,6 +27,13 @@ class _ReservasPageState extends State<ReservasPage> {
     final tokenStorage = TokenStorage(secureStorage);
     final reservaService = ReservaService(tokenStorage);
     reservaPageBloc = ReservaPageBloc(reservaService);
+    
+    _loadUserId(tokenStorage); 
+  }
+
+  Future<void> _loadUserId(TokenStorage tokenStorage) async {
+    final id = await tokenStorage.getUserId();
+    if (mounted) setState(() => _currentUserId = id);
     reservaPageBloc.add(GetReservas());
   }
 
@@ -140,26 +148,23 @@ class _ReservasPageState extends State<ReservasPage> {
                       mainAxisSpacing: 16,
                       childAspectRatio: 1.2,
                       children: [
-                        _buildFacilityItem(
-                            'Pista de Pádel 1', Icons.sports_tennis),
-                        _buildFacilityItem(
-                            'Pista de Pádel 2', Icons.sports_tennis),
-                        _buildFacilityItem(
-                            'Mesa de Ping Pong', Icons.sports_kabaddi),
+                        _buildFacilityItem('Pista de Pádel 1', Icons.sports_tennis),
+                        _buildFacilityItem('Pista de Pádel 2', Icons.sports_tennis),
+                        _buildFacilityItem('Mesa de Ping Pong', Icons.sports_kabaddi),
                         _buildFacilityItem('Sala Gourmet', Icons.restaurant),
                         _buildFacilityItem('Gimnasio', Icons.fitness_center),
                       ],
                     ),
                     const SizedBox(height: 32),
 
-                    // ── Header Mis Reservas ───────────────────────────────
+                    // ── Header Reservas ───────────────────────────────────
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Mis Reservas',
+                        Text('Reservas',
                             style: GoogleFonts.inter(
                                 fontSize: 14, fontWeight: FontWeight.bold)),
-                        Text('Tus reservas activas',
+                        Text('Todas las reservas activas',
                             style: GoogleFonts.inter(
                                 fontSize: 12, color: Colors.grey[400])),
                       ],
@@ -167,16 +172,13 @@ class _ReservasPageState extends State<ReservasPage> {
                     const SizedBox(height: 16),
 
                     // ── Lista dinámica ────────────────────────────────────
-                    if (state is ReservaPageLoading ||
-                        state is ReservaDeleting)
+                    if (state is ReservaPageLoading || state is ReservaDeleting)
                       const Center(
-                          child:
-                              CircularProgressIndicator(color: Colors.black))
+                          child: CircularProgressIndicator(color: Colors.black))
                     else if (state is ReservaPageLoaded)
                       _buildLista(state.reservas)
                     else
-                      const Center(
-                          child: Text('No hay reservas disponibles')),
+                      const Center(child: Text('No hay reservas disponibles')),
 
                     const SizedBox(height: 20),
                   ],
@@ -196,9 +198,8 @@ class _ReservasPageState extends State<ReservasPage> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 24),
-          child: Text('No tienes reservas activas',
-              style:
-                  GoogleFonts.inter(fontSize: 14, color: Colors.grey[500])),
+          child: Text('No hay reservas activas',
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.grey[500])),
         ),
       );
     }
@@ -210,8 +211,9 @@ class _ReservasPageState extends State<ReservasPage> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final reserva = reservas[index];
+        final esMia = reserva.usuarioId == _currentUserId; // ← nuevo
         return GestureDetector(
-          onTap: () => _mostrarOpciones(context, reserva),
+          onTap: () => _mostrarOpciones(context, reserva, esMia), // ← nuevo
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -249,14 +251,29 @@ class _ReservasPageState extends State<ReservasPage> {
                         style: GoogleFonts.inter(
                             fontSize: 12, color: const Color(0xFF6B7280)),
                       ),
+                      // ── Nombre del vecino si no es mía ────────────────
+                      if (!esMia) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          reserva.usuario.name,
+                          style: GoogleFonts.inter(
+                              fontSize: 11, color: const Color(0xFF9CA3AF)),
+                        ),
+                      ],
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
                 _buildEstadoBadge(reserva.estado),
                 const SizedBox(width: 6),
-                const Icon(Icons.more_vert,
-                    size: 18, color: Color(0xFF9CA3AF)),
+                Icon(
+                  Icons.more_vert,
+                  size: 18,
+                  // ← Icono gris si no es mía
+                  color: esMia
+                      ? const Color(0xFF4B5563)
+                      : const Color(0xFFD1D5DB),
+                ),
               ],
             ),
           ),
@@ -265,9 +282,9 @@ class _ReservasPageState extends State<ReservasPage> {
     );
   }
 
-  // ─── HELPERS ───────────────────────────────────────────────────────────────
+  // ─── OPCIONES ──────────────────────────────────────────────────────────────
 
-  void _mostrarOpciones(BuildContext context, ReservaResponse reserva) {
+  void _mostrarOpciones(BuildContext context, ReservaResponse reserva, bool esMia) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -279,10 +296,10 @@ class _ReservasPageState extends State<ReservasPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE5E7EB),
@@ -293,10 +310,9 @@ class _ReservasPageState extends State<ReservasPage> {
             Text(
               reserva.nombreEspacio,
               style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF111827),
-              ),
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF111827)),
             ),
             const SizedBox(height: 4),
             Text(
@@ -305,55 +321,85 @@ class _ReservasPageState extends State<ReservasPage> {
                   fontSize: 12, color: const Color(0xFF6B7280)),
             ),
             const SizedBox(height: 24),
-            // Editar
-            ListTile(
-              onTap: () {
-                Navigator.pop(context);
-                _abrirEditar(context, reserva);
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(8),
+
+            // ── Si es mía: editar y eliminar ──────────────────────────────
+            if (esMia) ...[
+              ListTile(
+                onTap: () {
+                  Navigator.pop(context);
+                  _abrirEditar(context, reserva);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.edit_outlined,
+                      color: Color(0xFF111827), size: 20),
                 ),
-                child: const Icon(Icons.edit_outlined,
-                    color: Color(0xFF111827), size: 20),
+                title: Text('Editar reserva',
+                    style: GoogleFonts.inter(
+                        fontSize: 14, fontWeight: FontWeight.w500)),
+                subtitle: Text('Modifica los datos de esta reserva',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF9CA3AF))),
+                contentPadding: EdgeInsets.zero,
               ),
-              title: Text('Editar reserva',
-                  style: GoogleFonts.inter(
-                      fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text('Modifica los datos de esta reserva',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF9CA3AF))),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(height: 1, color: Color(0xFFF3F4F6)),
-            // Eliminar
-            ListTile(
-              onTap: () {
-                Navigator.pop(context);
-                _confirmarEliminar(context, reserva);
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(8),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              ListTile(
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmarEliminar(context, reserva);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.red, size: 20),
                 ),
-                child: const Icon(Icons.delete_outline,
-                    color: Colors.red, size: 20),
+                title: Text('Eliminar reserva',
+                    style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.red)),
+                subtitle: Text('Esta acción no se puede deshacer',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF9CA3AF))),
+                contentPadding: EdgeInsets.zero,
               ),
-              title: Text('Eliminar reserva',
-                  style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.red)),
-              subtitle: Text('Esta acción no se puede deshacer',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF9CA3AF))),
-              contentPadding: EdgeInsets.zero,
-            ),
+
+            // ── Si es de otro vecino: solo info ───────────────────────────
+            ] else ...[
+              Row(
+                children: [
+                  const Icon(Icons.person_outline,
+                      color: Color(0xFF9CA3AF), size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Reservado por ${reserva.usuario.name}',
+                    style: GoogleFonts.inter(
+                        fontSize: 13, color: const Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      color: Color(0xFF9CA3AF), size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'No puedes modificar esta reserva',
+                    style: GoogleFonts.inter(
+                        fontSize: 13, color: const Color(0xFF9CA3AF)),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -377,8 +423,7 @@ class _ReservasPageState extends State<ReservasPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Eliminar reserva',
             style: GoogleFonts.inter(
                 fontWeight: FontWeight.bold, fontSize: 16)),
@@ -391,8 +436,7 @@ class _ReservasPageState extends State<ReservasPage> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancelar',
-                style:
-                    GoogleFonts.inter(color: const Color(0xFF6B7280))),
+                style: GoogleFonts.inter(color: const Color(0xFF6B7280))),
           ),
           ElevatedButton(
             onPressed: () {
@@ -422,9 +466,7 @@ class _ReservasPageState extends State<ReservasPage> {
       child: Text(
         estado,
         style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.white),
+            fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white),
       ),
     );
   }

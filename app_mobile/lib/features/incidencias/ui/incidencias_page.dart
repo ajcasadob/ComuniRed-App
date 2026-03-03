@@ -18,6 +18,7 @@ class IncidenciasPage extends StatefulWidget {
 class _IncidenciasPageState extends State<IncidenciasPage> {
   late final IncidenciaPageBloc incidenciaPageBloc;
   bool _initialized = false;
+  int? _currentUserId; // ← nuevo
 
   @override
   void initState() {
@@ -26,8 +27,17 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
     final tokenStorage = TokenStorage(secureStorage);
     final incidenciasService = IncidenciasService(tokenStorage);
     incidenciaPageBloc = IncidenciaPageBloc(incidenciasService);
+    _loadUserId(tokenStorage); // ← primero userId, luego datos
+  }
+
+  Future<void> _loadUserId(TokenStorage tokenStorage) async {
+    final id = await tokenStorage.getUserId();
+    if (!mounted) return;
+    setState(() {
+      _currentUserId = id;
+      _initialized = true;
+    });
     incidenciaPageBloc.add(GetIncidencias());
-    _initialized = true;
   }
 
   @override
@@ -39,7 +49,9 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Center(child: CircularProgressIndicator(color: Colors.black));
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.black),
+      );
     }
 
     return BlocProvider.value(
@@ -87,7 +99,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline,
+                        size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
                       'Error al cargar las incidencias',
@@ -96,7 +109,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: () => incidenciaPageBloc.add(GetIncidencias()),
+                      onPressed: () =>
+                          incidenciaPageBloc.add(GetIncidencias()),
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black),
                       child: Text('Reintentar',
@@ -182,7 +196,9 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                       child: const CrearIncidenciaModal(),
                     ),
                   );
-                  if (creada == true) incidenciaPageBloc.add(GetIncidencias());
+                  if (creada == true) {
+                    incidenciaPageBloc.add(GetIncidencias());
+                  }
                 },
                 icon: const Icon(Icons.add, color: Colors.white, size: 20),
                 label: Text(
@@ -209,7 +225,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                 Expanded(
                     child: _buildStatusCounter('En Proceso', '$enProceso')),
                 const SizedBox(width: 12),
-                Expanded(child: _buildStatusCounter('Resueltas', '$resueltas')),
+                Expanded(
+                    child: _buildStatusCounter('Resueltas', '$resueltas')),
               ],
             ),
             const SizedBox(height: 32),
@@ -267,8 +284,10 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
   }
 
   Widget _buildIncidenceCard(IncidenciasResponse incidencia) {
+    final esMia = incidencia.usuarioId == _currentUserId; // ← clave
+
     return GestureDetector(
-      onTap: () => _mostrarOpciones(context, incidencia),
+      onTap: () => _mostrarOpciones(context, incidencia, esMia),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -322,7 +341,6 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                     ],
                   ),
                 ),
-                // Indicador de estado + icono de más opciones
                 Row(
                   children: [
                     Container(
@@ -334,8 +352,13 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.more_vert,
-                        size: 18, color: Color(0xFF9CA3AF)),
+                    Icon(
+                      Icons.more_vert,
+                      size: 18,
+                      color: esMia
+                          ? const Color(0xFF9CA3AF)
+                          : const Color(0xFFD1D5DB), // más tenue si no es mía
+                    ),
                   ],
                 ),
               ],
@@ -419,7 +442,11 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
 
   // ─── HELPERS ───────────────────────────────────────────────────────────────
 
-  void _mostrarOpciones(BuildContext context, IncidenciasResponse incidencia) {
+  void _mostrarOpciones(
+    BuildContext context,
+    IncidenciasResponse incidencia,
+    bool esMia,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -431,7 +458,6 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
             Center(
               child: Container(
                 width: 40,
@@ -443,7 +469,6 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                 ),
               ),
             ),
-            // Título
             Text(
               incidencia.titulo,
               style: GoogleFonts.inter(
@@ -462,55 +487,69 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                   fontSize: 12, color: const Color(0xFF6B7280)),
             ),
             const SizedBox(height: 24),
-            // Editar
-            ListTile(
-              onTap: () {
-                Navigator.pop(context);
-                _abrirEditar(context, incidencia);
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(8),
+
+            if (esMia) ...[
+              ListTile(
+                onTap: () {
+                  Navigator.pop(context);
+                  _abrirEditar(context, incidencia);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.edit_outlined,
+                      color: Color(0xFF111827), size: 20),
                 ),
-                child: const Icon(Icons.edit_outlined,
-                    color: Color(0xFF111827), size: 20),
+                title: Text('Editar incidencia',
+                    style: GoogleFonts.inter(
+                        fontSize: 14, fontWeight: FontWeight.w500)),
+                subtitle: Text('Modifica los datos de esta incidencia',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF9CA3AF))),
+                contentPadding: EdgeInsets.zero,
               ),
-              title: Text('Editar incidencia',
-                  style: GoogleFonts.inter(
-                      fontSize: 14, fontWeight: FontWeight.w500)),
-              subtitle: Text('Modifica los datos de esta incidencia',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF9CA3AF))),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const Divider(height: 1, color: Color(0xFFF3F4F6)),
-            // Eliminar
-            ListTile(
-              onTap: () {
-                Navigator.pop(context);
-                _confirmarEliminar(context, incidencia);
-              },
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(8),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              ListTile(
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmarEliminar(context, incidencia);
+                },
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.red, size: 20),
                 ),
-                child: const Icon(Icons.delete_outline,
-                    color: Colors.red, size: 20),
+                title: Text('Eliminar incidencia',
+                    style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.red)),
+                subtitle: Text('Esta acción no se puede deshacer',
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF9CA3AF))),
+                contentPadding: EdgeInsets.zero,
               ),
-              title: Text('Eliminar incidencia',
-                  style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.red)),
-              subtitle: Text('Esta acción no se puede deshacer',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF9CA3AF))),
-              contentPadding: EdgeInsets.zero,
-            ),
+            ] else ...[
+              Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      color: Color(0xFF9CA3AF), size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Esta incidencia pertenece a otro vecino',
+                    style: GoogleFonts.inter(
+                        fontSize: 13, color: const Color(0xFF9CA3AF)),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -565,8 +604,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
             ),
-            child:
-                Text('Eliminar', style: GoogleFonts.inter(color: Colors.white)),
+            child: Text('Eliminar',
+                style: GoogleFonts.inter(color: Colors.white)),
           ),
         ],
       ),
@@ -580,8 +619,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
           alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11, color: const Color(0xFF9CA3AF))),
+            style:
+                GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
         const SizedBox(height: 2),
         Text(value,
             style: GoogleFonts.inter(

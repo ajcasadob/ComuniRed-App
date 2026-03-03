@@ -7,7 +7,7 @@ class IncidenciasResponse {
   final String prioridad;
   final String estado;
   final int usuarioId;
-  final int? viviendaId; // ← nullable
+  final int? viviendaId; 
   final DateTime? fechaResolucion;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -21,7 +21,7 @@ class IncidenciasResponse {
     required this.prioridad,
     required this.estado,
     required this.usuarioId,
-    this.viviendaId, // ← nullable
+    this.viviendaId, 
     this.fechaResolucion,
     required this.createdAt,
     required this.updatedAt,
@@ -37,7 +37,7 @@ class IncidenciasResponse {
       prioridad:   json['prioridad'] as String,
       estado:      json['estado'] as String,
       usuarioId:   (json['usuario_id'] as num).toInt(),
-      viviendaId:  json['vivienda_id'] != null        // ← null-safe
+      viviendaId:  json['vivienda_id'] != null       
           ? (json['vivienda_id'] as num).toInt()
           : null,
       fechaResolucion: json['fecha_resolucion'] != null
