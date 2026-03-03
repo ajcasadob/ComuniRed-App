@@ -4,10 +4,10 @@ class IncidenciasResponse {
   final String descripcion;
   final String ubicacion;
   final String categoria;
-  final String prioridad; 
+  final String prioridad;
   final String estado;
   final int usuarioId;
-  final int viviendaId;
+  final int? viviendaId; // ← nullable
   final DateTime? fechaResolucion;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,10 +18,10 @@ class IncidenciasResponse {
     required this.descripcion,
     required this.ubicacion,
     required this.categoria,
-    required this.prioridad, 
+    required this.prioridad,
     required this.estado,
     required this.usuarioId,
-    required this.viviendaId,
+    this.viviendaId, // ← nullable
     this.fechaResolucion,
     required this.createdAt,
     required this.updatedAt,
@@ -29,15 +29,17 @@ class IncidenciasResponse {
 
   factory IncidenciasResponse.fromJson(Map<String, dynamic> json) {
     return IncidenciasResponse(
-      id: json['id'] as int,
-      titulo: json['titulo'] as String,
+      id:          (json['id'] as num).toInt(),
+      titulo:      json['titulo'] as String,
       descripcion: json['descripcion'] as String,
-      ubicacion: json['ubicacion'] as String,
-      categoria: json['categoria'] as String,
-      prioridad: json['prioridad'] as String, // 👈
-      estado: json['estado'] as String,
-      usuarioId: json['usuario_id'] as int,
-      viviendaId: json['vivienda_id'] as int,
+      ubicacion:   json['ubicacion'] as String,
+      categoria:   json['categoria'] as String,
+      prioridad:   json['prioridad'] as String,
+      estado:      json['estado'] as String,
+      usuarioId:   (json['usuario_id'] as num).toInt(),
+      viviendaId:  json['vivienda_id'] != null        // ← null-safe
+          ? (json['vivienda_id'] as num).toInt()
+          : null,
       fechaResolucion: json['fecha_resolucion'] != null
           ? DateTime.parse(json['fecha_resolucion'] as String)
           : null,
@@ -48,18 +50,18 @@ class IncidenciasResponse {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'titulo': titulo,
-      'descripcion': descripcion,
-      'ubicacion': ubicacion,
-      'categoria': categoria,
-      'prioridad': prioridad, // 👈
-      'estado': estado,
-      'usuario_id': usuarioId,
-      'vivienda_id': viviendaId,
+      'id':               id,
+      'titulo':           titulo,
+      'descripcion':      descripcion,
+      'ubicacion':        ubicacion,
+      'categoria':        categoria,
+      'prioridad':        prioridad,
+      'estado':           estado,
+      'usuario_id':       usuarioId,
+      'vivienda_id':      viviendaId,
       'fecha_resolucion': fechaResolucion?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at':       createdAt.toIso8601String(),
+      'updated_at':       updatedAt.toIso8601String(),
     };
   }
 }

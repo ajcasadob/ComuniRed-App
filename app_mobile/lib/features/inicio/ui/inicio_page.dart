@@ -2,6 +2,7 @@ import 'package:app_mobile/core/models/inicio_response.dart';
 import 'package:app_mobile/core/service/inicio_service.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:app_mobile/features/inicio/ui/bloc/inicio_page_bloc.dart';
+import 'package:app_mobile/features/pagos/ui/pagos_page.dart';
 import 'package:app_mobile/features/perfil/ui/perfil_page.dart';
 import 'package:app_mobile/features/reservas/ui/reservas_page.dart';
 import 'package:app_mobile/features/incidencias/ui/incidencias_page.dart';
@@ -72,7 +73,9 @@ class _InicioPageState extends State<InicioPage> {
               const ReservasPage(),
               const IncidenciasPage(),
               const AvisosPage(),
+              const PagosPage(),
               const PerfilPage(),
+              
             ],
           ),
           bottomNavigationBar: _buildBottomNav(),
@@ -182,12 +185,34 @@ class _InicioPageState extends State<InicioPage> {
           ),
         ],
       ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: GestureDetector(
+            onTap: () => setState(() => _currentIndex = 5),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F4F6),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_outline,
+                color: Color(0xFF4B5563),
+                size: 20,
+              ),
+            ),
+          ),
+        ),
+      ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(color: const Color(0xFFF3F4F6), height: 1),
       ),
     );
   }
+
 
   // ─── WELCOME ───────────────────────────────────────────────────────────────
 
@@ -511,7 +536,7 @@ class _InicioPageState extends State<InicioPage> {
           _buildNavItem(Icons.calendar_month_outlined, 'Reservas', 1),
           _buildNavItem(Icons.error_outline_rounded, 'Incidencias', 2),
           _buildNavItem(Icons.notifications_none_rounded, 'Avisos', 3),
-          _buildNavItem(Icons.person_outline, 'Perfil', 4),
+          _buildNavItem(Icons.payment_outlined, 'Pagos', 4),
         ],
       ),
     );

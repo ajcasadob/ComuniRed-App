@@ -17,11 +17,11 @@ class InicioResponse {
 
   factory InicioResponse.fromJson(Map<String, dynamic> json) {
     return InicioResponse(
-      reservasActivas: json['reservas_activas'] as int,
-      incidenciasPendientes: json['incidencias_pendientes'] as int,
-      incidenciasUrgentes: json['incidencias_urgentes'] as int,
-      tasaCobro: json['tasa_cobro'] as int,
-      vecinosRegistrados: json['vecinos_registrados'] as int,
+      reservasActivas:      (json['reservas_activas'] as num).toInt(),
+      incidenciasPendientes:(json['incidencias_pendientes'] as num).toInt(),
+      incidenciasUrgentes:  (json['incidencias_urgentes'] as num).toInt(),
+      tasaCobro:            (json['tasa_cobro'] as num).toInt(),
+      vecinosRegistrados:   (json['vecinos_registrados'] as num).toInt(),
       ocupacionInstalaciones: (json['ocupacion_instalaciones'] as List)
           .map((e) => OcupacionInstalacion.fromJson(e))
           .toList(),
@@ -30,11 +30,11 @@ class InicioResponse {
 
   Map<String, dynamic> toJson() {
     return {
-      'reservas_activas': reservasActivas,
+      'reservas_activas':       reservasActivas,
       'incidencias_pendientes': incidenciasPendientes,
-      'incidencias_urgentes': incidenciasUrgentes,
-      'tasa_cobro': tasaCobro,
-      'vecinos_registrados': vecinosRegistrados,
+      'incidencias_urgentes':   incidenciasUrgentes,
+      'tasa_cobro':             tasaCobro,
+      'vecinos_registrados':    vecinosRegistrados,
       'ocupacion_instalaciones':
           ocupacionInstalaciones.map((e) => e.toJson()).toList(),
     };
@@ -54,16 +54,16 @@ class OcupacionInstalacion {
 
   factory OcupacionInstalacion.fromJson(Map<String, dynamic> json) {
     return OcupacionInstalacion(
-      nombre: json['nombre'] as String,
-      clave: json['clave'] as String,
-      porcentaje: json['porcentaje'] as int,
+      nombre:     json['nombre'] as String,
+      clave:      json['clave'] as String,
+      porcentaje: (json['porcentaje'] as num).toInt(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'nombre': nombre,
-      'clave': clave,
+      'nombre':     nombre,
+      'clave':      clave,
       'porcentaje': porcentaje,
     };
   }
