@@ -296,11 +296,16 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            
             // ── Foto (solo si existe) ────────────────────────────────────
             if (incidencia.foto != null)
+            
               ClipRRect(
+                
                 borderRadius:
+                
                     const BorderRadius.vertical(top: Radius.circular(16)),
+                    
                 child: Image.network(
                   '${ApiConstants.storageUrl}/${incidencia.foto}',
                   width: double.infinity,
