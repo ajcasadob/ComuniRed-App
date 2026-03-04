@@ -11,7 +11,6 @@ class IncidenciasResponse {
   final DateTime? fechaResolucion;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final String? foto; 
 
   IncidenciasResponse({
     required this.id,
@@ -26,7 +25,6 @@ class IncidenciasResponse {
     this.fechaResolucion,
     required this.createdAt,
     required this.updatedAt,
-    this.foto, // ← nuevo
   });
 
  factory IncidenciasResponse.fromJson(Map<String, dynamic> json) {
@@ -47,7 +45,6 @@ class IncidenciasResponse {
         : null,
     createdAt: DateTime.parse(json['created_at'] as String),
     updatedAt: DateTime.parse(json['updated_at'] as String),
-    foto:      json['foto'] as String?,
   );
 }
 
@@ -66,7 +63,6 @@ class IncidenciasResponse {
       'fecha_resolucion': fechaResolucion?.toIso8601String(),
       'created_at':       createdAt.toIso8601String(),
       'updated_at':       updatedAt.toIso8601String(),
-      'foto':             foto, // ← nuevo
     };
   }
 }

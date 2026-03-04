@@ -1,4 +1,3 @@
-import 'package:app_mobile/core/config/api_constants.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/incidencias_service.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
@@ -297,44 +296,6 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             
-            // ── Foto (solo si existe) ────────────────────────────────────
-            if (incidencia.foto != null)
-            
-              ClipRRect(
-                
-                borderRadius:
-                
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                    
-                child: Image.network(
-                  '${ApiConstants.storageUrl}/${incidencia.foto}',
-                  width: double.infinity,
-                  height: 180,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(
-                      height: 180,
-                      color: const Color(0xFFF3F4F6),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.black,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stack) => Container(
-                    height: 100,
-                    color: const Color(0xFFF3F4F6),
-                    child: const Center(
-                      child: Icon(Icons.broken_image_outlined,
-                          color: Color(0xFF9CA3AF), size: 32),
-                    ),
-                  ),
-                ),
-              ),
-
             // ── Contenido de la tarjeta ──────────────────────────────────
             Padding(
               padding: const EdgeInsets.all(20),

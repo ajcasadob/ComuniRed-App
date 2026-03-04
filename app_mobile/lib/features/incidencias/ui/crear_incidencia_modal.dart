@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:app_mobile/core/dtos/incidencia_request.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
@@ -8,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 
 class CrearIncidenciaModal extends StatefulWidget {
   final IncidenciasResponse? incidencia;
@@ -29,10 +26,6 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
   int? _usuarioId;
   int? _viviendaId;
   bool _loadingUser = true;
-
-  // ── Foto ──────────────────────────────────────────────────────────────────
-  File? _fotoSeleccionada;
-  final ImagePicker _picker = ImagePicker();
 
   bool get _esEdicion => widget.incidencia != null;
 
@@ -76,16 +69,6 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     });
   }
 
-  Future<void> _pickImage() async {
-    final picked = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (picked != null) {
-      setState(() => _fotoSeleccionada = File(picked.path));
-    }
-  }
-
   @override
   void dispose() {
     _tituloController.dispose();
@@ -114,7 +97,6 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     prioridad:    _prioridadSeleccionada,
     usuarioId:    _usuarioId!,
     viviendaId:   _viviendaId,
-    foto:         _fotoSeleccionada,
   );
 
   if (_esEdicion) {
@@ -236,8 +218,6 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                         Expanded(child: _buildPrioridadDropdown()),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildFotoPicker(), // ← nuevo
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
@@ -281,85 +261,6 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
   }
 
   // ─── WIDGETS ──────────────────────────────────────────────────────────────
-
-  Widget _buildFotoPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Foto (opcional)',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF374151),
-          ),
-        ),
-        const SizedBox(height: 6),
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            width: double.infinity,
-            height: _fotoSeleccionada != null ? 180 : 80,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: _fotoSeleccionada != null
-                ? Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          _fotoSeleccionada!,
-                          width: double.infinity,
-                          height: 180,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _fotoSeleccionada = null),
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(4),
-                            child: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.add_photo_alternate_outlined,
-                        color: Color(0xFF9CA3AF),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Añadir foto',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: const Color(0xFF9CA3AF),
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildField({
     required String label,

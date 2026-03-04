@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:app_mobile/core/config/api_constants.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:path/path.dart' as p;
 import 'package:app_mobile/core/dtos/incidencia_request.dart';
 import 'package:app_mobile/core/interface/incidencias_interface.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
@@ -49,23 +47,15 @@ class IncidenciasService implements IncidenciasInterface {
       final url = "${ApiConstants.baseUrl}/incidencias";
       final token = await _tokenStorage.getToken();
 
-      final multipart = http.MultipartRequest('POST', Uri.parse(url))
-        ..headers.addAll({
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
           "Accept": "application/json",
           "Authorization": "Bearer $token",
-        })
-        ..fields.addAll(request.toFields());
-
-      if (request.foto != null) {
-        multipart.files.add(await http.MultipartFile.fromPath(
-          'foto',
-          request.foto!.path,
-          contentType: MediaType('image', p.extension(request.foto!.path).replaceFirst('.', '')),
-        ));
-      }
-
-      final streamed = await multipart.send();
-      final response = await http.Response.fromStream(streamed);
+        },
+        body: jsonEncode(request.toFields()),
+      );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return IncidenciasResponse.fromJson(jsonDecode(response.body));
@@ -85,27 +75,15 @@ class IncidenciasService implements IncidenciasInterface {
       final url = "${ApiConstants.baseUrl}/incidencias/$id";
       final token = await _tokenStorage.getToken();
 
-      // Laravel no procesa multipart con PUT → usamos POST + _method=PUT
-      final multipart = http.MultipartRequest('POST', Uri.parse(url))
-        ..headers.addAll({
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          "Content-Type": "application/json",
           "Accept": "application/json",
           "Authorization": "Bearer $token",
-        })
-        ..fields.addAll({
-          '_method': 'PUT', // ← spoofing de método
-          ...request.toFields(),
-        });
-
-      if (request.foto != null) {
-        multipart.files.add(await http.MultipartFile.fromPath(
-          'foto',
-          request.foto!.path,
-          contentType: MediaType('image', p.extension(request.foto!.path).replaceFirst('.', '')),
-        ));
-      }
-
-      final streamed = await multipart.send();
-      final response = await http.Response.fromStream(streamed);
+        },
+        body: jsonEncode(request.toFields()),
+      );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return IncidenciasResponse.fromJson(jsonDecode(response.body));

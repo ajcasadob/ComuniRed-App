@@ -1,5 +1,3 @@
-import 'dart:io';
-
 class IncidenciaRequest {
   final String titulo;
   final String descripcion;
@@ -10,7 +8,6 @@ class IncidenciaRequest {
   final int usuarioId;
   final int? viviendaId;
   final DateTime? fechaResolucion;
-  final File? foto; 
 
   IncidenciaRequest({
     required this.titulo,
@@ -22,7 +19,6 @@ class IncidenciaRequest {
     required this.usuarioId,
     this.viviendaId,
     this.fechaResolucion,
-    this.foto, // ← nuevo
   });
 
   Map<String, String> toFields() {
