@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:app_mobile/core/dtos/incidencia_request.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
@@ -6,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CrearIncidenciaModal extends StatefulWidget {
   final IncidenciasResponse? incidencia;
@@ -27,6 +30,10 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
   int? _viviendaId;
   bool _loadingUser = true;
 
+  // ── Foto ──────────────────────────────────────────────────────────────────
+  File? _fotoSeleccionada;
+  final ImagePicker _picker = ImagePicker();
+
   bool get _esEdicion => widget.incidencia != null;
 
   static const List<String> _categorias = [
@@ -37,38 +44,46 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
   static const List<String> _prioridades = ['baja', 'media', 'alta'];
 
   @override
-void initState() {
-  super.initState();
-  final inc = widget.incidencia;
-  _tituloController = TextEditingController(text: inc?.titulo ?? '');
-  _descripcionController = TextEditingController(text: inc?.descripcion ?? '');
-  _ubicacionController = TextEditingController(text: inc?.ubicacion ?? '');
+  void initState() {
+    super.initState();
+    final inc = widget.incidencia;
+    _tituloController     = TextEditingController(text: inc?.titulo ?? '');
+    _descripcionController = TextEditingController(text: inc?.descripcion ?? '');
+    _ubicacionController  = TextEditingController(text: inc?.ubicacion ?? '');
 
-  // ── Normaliza y valida que el valor exista en la lista ──
-  final categoriaRaw = inc?.categoria.toLowerCase().trim() ?? 'fontaneria';
-  _categoriaSeleccionada = _categorias.contains(categoriaRaw)
-      ? categoriaRaw
-      : 'fontaneria'; // fallback si no coincide
+    final categoriaRaw = inc?.categoria.toLowerCase().trim() ?? 'fontaneria';
+    _categoriaSeleccionada = _categorias.contains(categoriaRaw)
+        ? categoriaRaw
+        : 'fontaneria';
 
-  final prioridadRaw = inc?.prioridad.toLowerCase().trim() ?? 'baja';
-  _prioridadSeleccionada = _prioridades.contains(prioridadRaw)
-      ? prioridadRaw
-      : 'baja'; // fallback si no coincide
+    final prioridadRaw = inc?.prioridad.toLowerCase().trim() ?? 'baja';
+    _prioridadSeleccionada = _prioridades.contains(prioridadRaw)
+        ? prioridadRaw
+        : 'baja';
 
-  _loadIds();
-}
-
+    _loadIds();
+  }
 
   Future<void> _loadIds() async {
     const secureStorage = FlutterSecureStorage();
     final tokenStorage = TokenStorage(secureStorage);
-    final userId = await tokenStorage.getUserId();
+    final userId    = await tokenStorage.getUserId();
     final viviendaId = await tokenStorage.getViviendaId();
     setState(() {
-      _usuarioId = widget.incidencia?.usuarioId ?? userId;
+      _usuarioId  = widget.incidencia?.usuarioId ?? userId;
       _viviendaId = widget.incidencia?.viviendaId ?? viviendaId;
       _loadingUser = false;
     });
+  }
+
+  Future<void> _pickImage() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked != null) {
+      setState(() => _fotoSeleccionada = File(picked.path));
+    }
   }
 
   @override
@@ -80,35 +95,37 @@ void initState() {
   }
 
   void _submitForm() {
-    if (!_formKey.currentState!.validate()) return;
-    if (_usuarioId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo obtener el usuario. Vuelve a iniciar sesión.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final request = IncidenciaRequest(
-      titulo: _tituloController.text.trim(),
-      descripcion: _descripcionController.text.trim(),
-      ubicacion: _ubicacionController.text.trim(),
-      categoria: _categoriaSeleccionada,
-      prioridad: _prioridadSeleccionada,
-      usuarioId: _usuarioId!,
-      viviendaId: _viviendaId,
+  if (!_formKey.currentState!.validate()) return;
+  if (_usuarioId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('No se pudo obtener el usuario. Vuelve a iniciar sesión.'),
+        backgroundColor: Colors.red,
+      ),
     );
-
-    if (_esEdicion) {
-      context.read<IncidenciaPageBloc>().add(
-            UpdateIncidencia(widget.incidencia!.id, request), // ← posicional
-          );
-    } else {
-      context.read<IncidenciaPageBloc>().add(CreateIncidencia(request));
-    }
+    return;
   }
+
+  final request = IncidenciaRequest(
+    titulo:       _tituloController.text.trim(),
+    descripcion:  _descripcionController.text.trim(),  
+    ubicacion:    _ubicacionController.text.trim(),
+    categoria:    _categoriaSeleccionada,
+    prioridad:    _prioridadSeleccionada,
+    usuarioId:    _usuarioId!,
+    viviendaId:   _viviendaId,
+    foto:         _fotoSeleccionada,
+  );
+
+  if (_esEdicion) {
+    context.read<IncidenciaPageBloc>().add(
+          UpdateIncidencia(widget.incidencia!.id, request),
+        );
+  } else {
+    context.read<IncidenciaPageBloc>().add(CreateIncidencia(request));
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -118,8 +135,7 @@ void initState() {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                  'Incidencia "${state.incidencia.titulo}" creada correctamente'),
+              content: Text('Incidencia "${state.incidencia.titulo}" creada correctamente'),
               backgroundColor: Colors.green,
             ),
           );
@@ -128,8 +144,7 @@ void initState() {
           Navigator.pop(context, true);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                  'Incidencia "${state.incidencia.titulo}" actualizada correctamente'),
+              content: Text('Incidencia "${state.incidencia.titulo}" actualizada correctamente'),
               backgroundColor: Colors.green,
             ),
           );
@@ -140,8 +155,9 @@ void initState() {
               : (state as IncidenciaUpdateError).message;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Error: $message'),
-                backgroundColor: Colors.red),
+              content: Text('Error: $message'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       },
@@ -220,6 +236,8 @@ void initState() {
                         Expanded(child: _buildPrioridadDropdown()),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    _buildFotoPicker(), // ← nuevo
                     const SizedBox(height: 28),
                     SizedBox(
                       width: double.infinity,
@@ -243,9 +261,7 @@ void initState() {
                                 ),
                               )
                             : Text(
-                                _esEdicion
-                                    ? 'Guardar Cambios'
-                                    : 'Crear Incidencia',
+                                _esEdicion ? 'Guardar Cambios' : 'Crear Incidencia',
                                 style: GoogleFonts.inter(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -264,7 +280,86 @@ void initState() {
     );
   }
 
-  // ─── WIDGETS ─────────────────────────────────────────────────────────────
+  // ─── WIDGETS ──────────────────────────────────────────────────────────────
+
+  Widget _buildFotoPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Foto (opcional)',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF374151),
+          ),
+        ),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: _pickImage,
+          child: Container(
+            width: double.infinity,
+            height: _fotoSeleccionada != null ? 180 : 80,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: _fotoSeleccionada != null
+                ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          _fotoSeleccionada!,
+                          width: double.infinity,
+                          height: 180,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _fotoSeleccionada = null),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Añadir foto',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildField({
     required String label,
@@ -288,16 +383,13 @@ void initState() {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
-          style:
-              GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111827)),
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111827)),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(
-                fontSize: 13, color: const Color(0xFF9CA3AF)),
+            hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9CA3AF)),
             filled: true,
             fillColor: Colors.white,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
@@ -306,8 +398,7 @@ void initState() {
                 borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: Color(0xFF111827), width: 1.5)),
+                borderSide: const BorderSide(color: Color(0xFF111827), width: 1.5)),
             errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Colors.red)),
@@ -329,8 +420,7 @@ void initState() {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _categoriaSeleccionada,
-          onChanged: (value) =>
-              setState(() => _categoriaSeleccionada = value!),
+          onChanged: (value) => setState(() => _categoriaSeleccionada = value!),
           items: _categorias
               .map((cat) => DropdownMenuItem(
                     value: cat,
@@ -358,8 +448,7 @@ void initState() {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           value: _prioridadSeleccionada,
-          onChanged: (value) =>
-              setState(() => _prioridadSeleccionada = value!),
+          onChanged: (value) => setState(() => _prioridadSeleccionada = value!),
           items: _prioridades
               .map((p) => DropdownMenuItem(
                     value: p,
@@ -400,8 +489,7 @@ void initState() {
     return InputDecoration(
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB))),

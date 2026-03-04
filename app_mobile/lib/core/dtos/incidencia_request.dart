@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class IncidenciaRequest {
   final String titulo;
   final String descripcion;
@@ -8,6 +10,7 @@ class IncidenciaRequest {
   final int usuarioId;
   final int? viviendaId;
   final DateTime? fechaResolucion;
+  final File? foto; 
 
   IncidenciaRequest({
     required this.titulo,
@@ -19,9 +22,10 @@ class IncidenciaRequest {
     required this.usuarioId,
     this.viviendaId,
     this.fechaResolucion,
+    this.foto, // ← nuevo
   });
 
-  Map<String, dynamic> toJson() {
+  Map<String, String> toFields() {
     return {
       'titulo': titulo,
       'descripcion': descripcion,
@@ -29,9 +33,10 @@ class IncidenciaRequest {
       'categoria': categoria,
       'estado': estado,
       'prioridad': prioridad,
-      'usuario_id': usuarioId,
-      'vivienda_id': viviendaId,
-      'fecha_resolucion': fechaResolucion?.toIso8601String(),
+      'usuario_id': usuarioId.toString(),
+      if (viviendaId != null) 'vivienda_id': viviendaId.toString(),
+      if (fechaResolucion != null)
+        'fecha_resolucion': fechaResolucion!.toIso8601String(),
     };
   }
 }

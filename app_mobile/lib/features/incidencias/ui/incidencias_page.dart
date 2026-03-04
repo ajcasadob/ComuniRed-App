@@ -1,3 +1,4 @@
+import 'package:app_mobile/core/config/api_constants.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/incidencias_service.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
@@ -18,7 +19,7 @@ class IncidenciasPage extends StatefulWidget {
 class _IncidenciasPageState extends State<IncidenciasPage> {
   late final IncidenciaPageBloc incidenciaPageBloc;
   bool _initialized = false;
-  int? _currentUserId; // ← nuevo
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -27,7 +28,7 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
     final tokenStorage = TokenStorage(secureStorage);
     final incidenciasService = IncidenciasService(tokenStorage);
     incidenciaPageBloc = IncidenciaPageBloc(incidenciasService);
-    _loadUserId(tokenStorage); // ← primero userId, luego datos
+    _loadUserId(tokenStorage);
   }
 
   Future<void> _loadUserId(TokenStorage tokenStorage) async {
@@ -99,8 +100,7 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
                       'Error al cargar las incidencias',
@@ -109,10 +109,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: () =>
-                          incidenciaPageBloc.add(GetIncidencias()),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black),
+                      onPressed: () => incidenciaPageBloc.add(GetIncidencias()),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
                       child: Text('Reintentar',
                           style: GoogleFonts.inter(color: Colors.white)),
                     ),
@@ -135,9 +133,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
   // ─── CONTENIDO ─────────────────────────────────────────────────────────────
 
   Widget _buildContent(List<IncidenciasResponse> incidencias) {
-    final int pendientes = incidencias
-        .where((i) => i.estado.toLowerCase() == 'pendiente')
-        .length;
+    final int pendientes =
+        incidencias.where((i) => i.estado.toLowerCase() == 'pendiente').length;
     final int enProceso = incidencias
         .where((i) =>
             i.estado.toLowerCase() == 'en_proceso' ||
@@ -196,9 +193,7 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                       child: const CrearIncidenciaModal(),
                     ),
                   );
-                  if (creada == true) {
-                    incidenciaPageBloc.add(GetIncidencias());
-                  }
+                  if (creada == true) incidenciaPageBloc.add(GetIncidencias());
                 },
                 icon: const Icon(Icons.add, color: Colors.white, size: 20),
                 label: Text(
@@ -219,14 +214,11 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
             const SizedBox(height: 32),
             Row(
               children: [
-                Expanded(
-                    child: _buildStatusCounter('Pendientes', '$pendientes')),
+                Expanded(child: _buildStatusCounter('Pendientes', '$pendientes')),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _buildStatusCounter('En Proceso', '$enProceso')),
+                Expanded(child: _buildStatusCounter('En Proceso', '$enProceso')),
                 const SizedBox(width: 12),
-                Expanded(
-                    child: _buildStatusCounter('Resueltas', '$resueltas')),
+                Expanded(child: _buildStatusCounter('Resueltas', '$resueltas')),
               ],
             ),
             const SizedBox(height: 32),
@@ -284,12 +276,11 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
   }
 
   Widget _buildIncidenceCard(IncidenciasResponse incidencia) {
-    final esMia = incidencia.usuarioId == _currentUserId; // ← clave
+    final esMia = incidencia.usuarioId == _currentUserId;
 
     return GestureDetector(
       onTap: () => _mostrarOpciones(context, incidencia, esMia),
       child: Container(
-        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -305,135 +296,179 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          incidencia.titulo,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF111827),
-                          ),
+            // ── Foto (solo si existe) ────────────────────────────────────
+            if (incidencia.foto != null)
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.network(
+                  '${ApiConstants.storageUrl}/${incidencia.foto}',
+                  width: double.infinity,
+                  height: 180,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return Container(
+                      height: 180,
+                      color: const Color(0xFFF3F4F6),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                          strokeWidth: 2,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(4),
+                    );
+                  },
+                  errorBuilder: (context, error, stack) => Container(
+                    height: 100,
+                    color: const Color(0xFFF3F4F6),
+                    child: const Center(
+                      child: Icon(Icons.broken_image_outlined,
+                          color: Color(0xFF9CA3AF), size: 32),
+                    ),
+                  ),
+                ),
+              ),
+
+            // ── Contenido de la tarjeta ──────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                incidencia.titulo,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF111827),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE2E8F0),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                incidencia.categoria.toUpperCase(),
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF475569),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          incidencia.categoria.toUpperCase(),
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF475569),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: _getEstadoColor(incidencia.estado),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.more_vert,
+                            size: 18,
+                            color: esMia
+                                ? const Color(0xFF9CA3AF)
+                                : const Color(0xFFD1D5DB),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ),
-                Row(
-                  children: [
+                  const SizedBox(height: 12),
+                  Text(
+                    incidencia.descripcion,
+                    style: GoogleFonts.inter(
+                        fontSize: 12, color: const Color(0xFF6B7280)),
+                  ),
+                  const SizedBox(height: 24),
+                  Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                              child: _buildInfoItem(
+                                  'Categoría:', incidencia.categoria)),
+                          Expanded(
+                              child: _buildInfoItem(
+                            'Ubicación:',
+                            incidencia.ubicacion,
+                            alignRight: true,
+                          )),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                              child:
+                                  _buildInfoItem('Estado:', incidencia.estado)),
+                          Expanded(
+                              child: _buildInfoItem(
+                            'Fecha:',
+                            '${incidencia.createdAt.day}/${incidencia.createdAt.month}/${incidencia.createdAt.year}',
+                            alignRight: true,
+                          )),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (incidencia.fechaResolucion != null) ...[
+                    const SizedBox(height: 24),
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: _getEstadoColor(incidencia.estado),
-                        shape: BoxShape.circle,
+                        color: const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFF3F4F6)),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.more_vert,
-                      size: 18,
-                      color: esMia
-                          ? const Color(0xFF9CA3AF)
-                          : const Color(0xFFD1D5DB), // más tenue si no es mía
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              incidencia.descripcion,
-              style: GoogleFonts.inter(
-                  fontSize: 12, color: const Color(0xFF6B7280)),
-            ),
-            const SizedBox(height: 24),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                        child:
-                            _buildInfoItem('Categoría:', incidencia.categoria)),
-                    Expanded(
-                        child: _buildInfoItem(
-                      'Ubicación:',
-                      incidencia.ubicacion,
-                      alignRight: true,
-                    )),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                        child: _buildInfoItem('Estado:', incidencia.estado)),
-                    Expanded(
-                        child: _buildInfoItem(
-                      'Fecha:',
-                      '${incidencia.createdAt.day}/${incidencia.createdAt.month}/${incidencia.createdAt.year}',
-                      alignRight: true,
-                    )),
-                  ],
-                ),
-              ],
-            ),
-            if (incidencia.fechaResolucion != null) ...[
-              const SizedBox(height: 24),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF3F4F6)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fecha de resolución:',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF111827),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${incidencia.fechaResolucion!.day}/${incidencia.fechaResolucion!.month}/${incidencia.fechaResolucion!.year}',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: const Color(0xFF4B5563),
-                        fontStyle: FontStyle.italic,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Fecha de resolución:',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF111827),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${incidencia.fechaResolucion!.day}/${incidencia.fechaResolucion!.month}/${incidencia.fechaResolucion!.year}',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF4B5563),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -487,7 +522,6 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
                   fontSize: 12, color: const Color(0xFF6B7280)),
             ),
             const SizedBox(height: 24),
-
             if (esMia) ...[
               ListTile(
                 onTap: () {
@@ -619,8 +653,8 @@ class _IncidenciasPageState extends State<IncidenciasPage> {
           alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
         Text(label,
-            style:
-                GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+            style: GoogleFonts.inter(
+                fontSize: 11, color: const Color(0xFF9CA3AF))),
         const SizedBox(height: 2),
         Text(value,
             style: GoogleFonts.inter(
