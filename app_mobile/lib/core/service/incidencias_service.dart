@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_mobile/core/config/api_constants.dart';
 import 'package:app_mobile/core/dtos/incidencia_request.dart';
@@ -6,6 +7,14 @@ import 'package:app_mobile/core/interface/incidencias_interface.dart';
 import 'package:app_mobile/core/models/incidencias_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:http/http.dart' as http;
+
+class IncidenciasException implements Exception {
+  final String message;
+  const IncidenciasException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class IncidenciasService implements IncidenciasInterface {
   final TokenStorage _tokenStorage;
@@ -26,18 +35,22 @@ class IncidenciasService implements IncidenciasInterface {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final List<dynamic> responseBody = jsonDecode(response.body);
-        
-        var incidencias = responseBody
-            .map((e) => IncidenciasResponse.fromJson(e))
-            .toList();
-        return incidencias;
+        return responseBody.map((e) => IncidenciasResponse.fromJson(e)).toList();
+      } else if (response.statusCode == 401) {
+        throw const IncidenciasException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const IncidenciasException('No tienes permiso para ver las incidencias.');
+      } else if (response.statusCode == 404) {
+        throw const IncidenciasException('Recurso no encontrado.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-            "Error al obtener las incidencias: ${errorBody['message'] ?? 'Error desconocido'}");
+        throw IncidenciasException('Error del servidor (${response.statusCode}).');
       }
+    } on IncidenciasException {
+      rethrow;
+    } on SocketException {
+      throw const IncidenciasException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception("Error al obtener las incidencias: $e");
+      throw IncidenciasException('Error inesperado: $e');
     }
   }
 
@@ -59,13 +72,21 @@ class IncidenciasService implements IncidenciasInterface {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return IncidenciasResponse.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 400) {
+        throw const IncidenciasException('Datos de la incidencia inválidos.');
+      } else if (response.statusCode == 401) {
+        throw const IncidenciasException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const IncidenciasException('No tienes permiso para crear incidencias.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-            "Error al crear la incidencia: ${errorBody['message'] ?? 'Error desconocido'}");
+        throw IncidenciasException('Error del servidor (${response.statusCode}).');
       }
+    } on IncidenciasException {
+      rethrow;
+    } on SocketException {
+      throw const IncidenciasException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception("Error al crear la incidencia: $e");
+      throw IncidenciasException('Error inesperado: $e');
     }
   }
 
@@ -87,13 +108,23 @@ class IncidenciasService implements IncidenciasInterface {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return IncidenciasResponse.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 400) {
+        throw const IncidenciasException('Datos de la incidencia inválidos.');
+      } else if (response.statusCode == 401) {
+        throw const IncidenciasException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const IncidenciasException('No tienes permiso para modificar esta incidencia.');
+      } else if (response.statusCode == 404) {
+        throw const IncidenciasException('Incidencia no encontrada.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-            "Error al actualizar la incidencia: ${errorBody['message'] ?? 'Error desconocido'}");
+        throw IncidenciasException('Error del servidor (${response.statusCode}).');
       }
+    } on IncidenciasException {
+      rethrow;
+    } on SocketException {
+      throw const IncidenciasException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception("Error al actualizar la incidencia: $e");
+      throw IncidenciasException('Error inesperado: $e');
     }
   }
 
@@ -112,13 +143,23 @@ class IncidenciasService implements IncidenciasInterface {
         },
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-            "Error al eliminar la incidencia: ${errorBody['message'] ?? 'Error desconocido'}");
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return;
+      } else if (response.statusCode == 401) {
+        throw const IncidenciasException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const IncidenciasException('No tienes permiso para eliminar esta incidencia.');
+      } else if (response.statusCode == 404) {
+        throw const IncidenciasException('Incidencia no encontrada.');
+      } else {
+        throw IncidenciasException('Error del servidor (${response.statusCode}).');
       }
+    } on IncidenciasException {
+      rethrow;
+    } on SocketException {
+      throw const IncidenciasException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception("Error al eliminar la incidencia: $e");
+      throw IncidenciasException('Error inesperado: $e');
     }
   }
 }

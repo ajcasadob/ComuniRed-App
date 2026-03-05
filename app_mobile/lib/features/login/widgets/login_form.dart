@@ -91,9 +91,9 @@ class LoginForm extends StatelessWidget {
                       if (value == null || value.trim().isEmpty) {
                         return 'El email es requerido';
                       }
-                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                      if (!emailRegex.hasMatch(value)) {
-                        return 'Ingresa un email válido';
+                      final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$');
+                      if (!emailRegex.hasMatch(value.trim())) {
+                        return 'Introduce un email válido';
                       }
                       return null;
                     },
@@ -138,8 +138,8 @@ class LoginForm extends StatelessWidget {
                       if (value == null || value.isEmpty) {
                         return 'La contraseña es requerida';
                       }
-                      if (value.length < 6) {
-                        return 'La contraseña debe tener al menos 6 caracteres';
+                      if (value.length < 8) {
+                        return 'La contraseña debe tener al menos 8 caracteres';
                       }
                       return null;
                     },

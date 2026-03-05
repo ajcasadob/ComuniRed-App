@@ -65,6 +65,52 @@ class _NuevaReservaPageState extends State<NuevaReservaPage> {
 
   void _crearReserva() async {
     if (_formKey.currentState!.validate()) {
+      if (_horaInicio != null && _horaFin != null) {
+        final inicioEnMinutos = _horaInicio!.hour * 60 + _horaInicio!.minute;
+        final finEnMinutos = _horaFin!.hour * 60 + _horaFin!.minute;
+        if (finEnMinutos <= inicioEnMinutos) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('La hora de fin debe ser posterior a la hora de inicio.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
+      final currentState = widget.bloc.state;
+      if (currentState is ReservaPageLoaded &&
+          _instalacionSeleccionada != null &&
+          _fechaSeleccionada != null &&
+          _horaInicio != null &&
+          _horaFin != null) {
+        final fechaStr = _formatFecha(_fechaSeleccionada!);
+        final inicioStr = _formatHora(_horaInicio!);
+        final finStr = _formatHora(_horaFin!);
+
+        final hayConflicto = currentState.reservas.any((r) {
+          if (r.nombreEspacio != _instalacionSeleccionada) return false;
+          if (r.fechaReserva.substring(0, 10) != fechaStr) return false;
+          final rInicio = r.horaInicio.substring(0, 5);
+          final rFin = r.horaFin.substring(0, 5);
+          return inicioStr.compareTo(rFin) < 0 && rInicio.compareTo(finStr) < 0;
+        });
+
+        if (hayConflicto) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '$_instalacionSeleccionada ya está reservada en ese horario el $fechaStr.',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
       const secureStorage = FlutterSecureStorage();
       final tokenStorage = TokenStorage(secureStorage);
       final usuarioId = await tokenStorage.getUserId();

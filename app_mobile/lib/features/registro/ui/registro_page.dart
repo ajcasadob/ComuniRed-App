@@ -174,6 +174,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                   if (value == null || value.trim().isEmpty) {
                                     return 'El nombre es requerido';
                                   }
+                                  if (value.trim().length < 4) {
+                                    return 'El nombre debe tener al menos 4 caracteres';
+                                  }
+                                  if (value.trim().length > 60) {
+                                    return 'El nombre no puede superar los 60 caracteres';
+                                  }
                                   return null;
                                 },
                               ),
@@ -222,10 +228,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                     return 'El email es requerido';
                                   }
                                   final emailRegex = RegExp(
-                                    r'^[^@]+@[^@]+\.[^@]+$',
+                                    r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$',
                                   );
-                                  if (!emailRegex.hasMatch(value)) {
-                                    return 'Ingresa un email válido';
+                                  if (!emailRegex.hasMatch(value.trim())) {
+                                    return 'Introduce un email válido';
                                   }
                                   return null;
                                 },
@@ -274,8 +280,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                   if (value == null || value.isEmpty) {
                                     return 'La contraseña es requerida';
                                   }
-                                  if (value.length < 6) {
-                                    return 'La contraseña debe tener al menos 6 caracteres';
+                                  if (value.length < 8) {
+                                    return 'La contraseña debe tener al menos 8 caracteres';
                                   }
                                   return null;
                                 },

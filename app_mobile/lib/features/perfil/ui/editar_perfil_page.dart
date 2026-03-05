@@ -123,9 +123,12 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         label: 'Nombre',
                         controller: _nameController,
                         icon: Icons.person_outline,
-                        validator: (v) => v == null || v.isEmpty
-                            ? 'El nombre es obligatorio'
-                            : null,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'El nombre es obligatorio';
+                          if (v.trim().length < 4) return 'El nombre debe tener al menos 4 caracteres';
+                          if (v.trim().length > 60) return 'El nombre no puede superar los 60 caracteres';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       _buildField(
@@ -134,10 +137,9 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
                         validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'El correo es obligatorio';
-                          }
-                          if (!v.contains('@')) return 'Correo no válido';
+                          if (v == null || v.trim().isEmpty) return 'El correo es obligatorio';
+                          final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$');
+                          if (!emailRegex.hasMatch(v.trim())) return 'Introduce un correo válido';
                           return null;
                         },
                       ),

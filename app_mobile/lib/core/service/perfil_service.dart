@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_mobile/core/config/api_constants.dart';
 import 'package:app_mobile/core/dtos/update_usuario_request.dart';
@@ -6,6 +7,14 @@ import 'package:app_mobile/core/interface/perfil_interface.dart';
 import 'package:app_mobile/core/models/usuario_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:http/http.dart' as http;
+
+class PerfilException implements Exception {
+  final String message;
+  const PerfilException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class PerfilService implements PerfilInterface {
 
@@ -30,15 +39,22 @@ class PerfilService implements PerfilInterface {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return UsuarioResponse.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 401) {
+        throw const PerfilException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const PerfilException('No tienes permiso para ver este perfil.');
+      } else if (response.statusCode == 404) {
+        throw const PerfilException('Usuario no encontrado.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-            'Error al obtener el usuario: ${errorBody['message'] ?? 'Error desconocido'}');
+        throw PerfilException('Error del servidor (${response.statusCode}).');
       }
+    } on PerfilException {
+      rethrow;
+    } on SocketException {
+      throw const PerfilException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception('Error al obtener el usuario: $e');
+      throw PerfilException('Error inesperado: $e');
     }
-
   }
 
   @override
@@ -57,14 +73,23 @@ class PerfilService implements PerfilInterface {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return UsuarioResponse.fromJson(jsonDecode(response.body));
+      } else if (response.statusCode == 400) {
+        throw const PerfilException('Datos del perfil inválidos.');
+      } else if (response.statusCode == 401) {
+        throw const PerfilException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const PerfilException('No tienes permiso para modificar este perfil.');
+      } else if (response.statusCode == 404) {
+        throw const PerfilException('Usuario no encontrado.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-            'Error al actualizar el usuario: ${errorBody['message'] ?? 'Error desconocido'}');
+        throw PerfilException('Error del servidor (${response.statusCode}).');
       }
+    } on PerfilException {
+      rethrow;
+    } on SocketException {
+      throw const PerfilException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception('Error al actualizar el usuario: $e');
+      throw PerfilException('Error inesperado: $e');
     }
-
   }
 }

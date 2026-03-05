@@ -186,9 +186,12 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                       label: 'Título',
                       controller: _tituloController,
                       hint: 'Ej: Fuga de agua en portal',
-                      validator: (v) => v == null || v.isEmpty
-                          ? 'El título es obligatorio'
-                          : null,
+                      maxLength: 100,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'El título es obligatorio';
+                        if (v.trim().length < 5) return 'El título debe tener al menos 5 caracteres';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     _buildField(
@@ -196,18 +199,24 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
                       controller: _descripcionController,
                       hint: 'Describe el problema con detalle',
                       maxLines: 3,
-                      validator: (v) => v == null || v.isEmpty
-                          ? 'La descripción es obligatoria'
-                          : null,
+                      maxLength: 500,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'La descripción es obligatoria';
+                        if (v.trim().length < 10) return 'La descripción debe tener al menos 10 caracteres';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     _buildField(
                       label: 'Ubicación',
                       controller: _ubicacionController,
                       hint: 'Ej: Portal A, Escalera 2...',
-                      validator: (v) => v == null || v.isEmpty
-                          ? 'La ubicación es obligatoria'
-                          : null,
+                      maxLength: 100,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return 'La ubicación es obligatoria';
+                        if (v.trim().length < 3) return 'La ubicación debe tener al menos 3 caracteres';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -267,6 +276,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
     required TextEditingController controller,
     String? hint,
     int maxLines = 1,
+    int? maxLength,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
@@ -282,6 +292,7 @@ class _CrearIncidenciaModalState extends State<CrearIncidenciaModal> {
         TextFormField(
           controller: controller,
           maxLines: maxLines,
+          maxLength: maxLength,
           keyboardType: keyboardType,
           validator: validator,
           style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111827)),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_mobile/core/config/api_constants.dart';
 import 'package:app_mobile/core/interface/pagos_interface.dart';
@@ -6,7 +7,15 @@ import 'package:app_mobile/core/models/pago_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:http/http.dart' as http;
 
-class PagoService implements PagosInterface{
+class PagoException implements Exception {
+  final String message;
+  const PagoException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+class PagoService implements PagosInterface {
 
   final url = "${ApiConstants.baseUrl}/pagos";
   final TokenStorage _tokenStorage;
@@ -34,16 +43,21 @@ class PagoService implements PagosInterface{
         return jsonList
             .map((e) => PagoResponse.fromJson(e as Map<String, dynamic>))
             .toList();
+      } else if (response.statusCode == 401) {
+        throw const PagoException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const PagoException('No tienes permiso para ver los pagos.');
+      } else if (response.statusCode == 404) {
+        throw const PagoException('Recurso no encontrado.');
       } else {
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-          'Error al obtener los pagos: ${errorBody['message'] ?? 'Error desconocido'}',
-        );
+        throw PagoException('Error del servidor (${response.statusCode}).');
       }
+    } on PagoException {
+      rethrow;
+    } on SocketException {
+      throw const PagoException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception('Error al obtener los pagos: $e');
+      throw PagoException('Error inesperado: $e');
     }
-
-
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_mobile/core/config/api_constants.dart';
 import 'package:app_mobile/core/dtos/reserva_request_dto.dart';
@@ -6,6 +7,14 @@ import 'package:app_mobile/core/interface/reserva_interface.dart';
 import 'package:app_mobile/core/models/reserva_response.dart';
 import 'package:app_mobile/core/service/token_storage.dart';
 import 'package:http/http.dart' as http;
+
+class ReservaException implements Exception {
+  final String message;
+  const ReservaException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class ReservaService implements ReservaInterface {
 
@@ -32,17 +41,21 @@ class ReservaService implements ReservaInterface {
         return jsonList
             .map((e) => ReservaResponse.fromJson(e as Map<String, dynamic>))
             .toList();
-
+      } else if (response.statusCode == 401) {
+        throw const ReservaException('No autorizado. Por favor, inicia sesión.');
+      } else if (response.statusCode == 403) {
+        throw const ReservaException('No tienes permiso para ver las reservas.');
+      } else if (response.statusCode == 404) {
+        throw const ReservaException('Recurso no encontrado.');
       } else {
-
-        final errorBody = jsonDecode(response.body);
-        throw Exception(
-          "Error al obtener las reservas: ${errorBody['message'] ?? 'Error desconocido'}",
-        );
+        throw ReservaException('Error del servidor (${response.statusCode}).');
       }
-
+    } on ReservaException {
+      rethrow;
+    } on SocketException {
+      throw const ReservaException('No se pudo conectar al servidor. Verifica tu conexión.');
     } catch (e) {
-      throw Exception("Error al obtener las reservas: $e");
+      throw ReservaException('Error inesperado: $e');
     }
   }
 
@@ -62,22 +75,29 @@ class ReservaService implements ReservaInterface {
         },
         body: jsonEncode(request.toJson()));
 
-        if(response.statusCode >= 200 && response.statusCode < 300){
-
+        if (response.statusCode >= 200 && response.statusCode < 300) {
           final Map<String, dynamic> responseBody = jsonDecode(response.body);
           return ReservaResponse.fromJson(responseBody);
-
-        }else{
-          final errorBody= jsonDecode(response.body);
-          throw Exception("Error al crear reserva: ${errorBody['message'] ?? 'Error desconocido'}");
+        } else if (response.statusCode == 400) {
+          throw const ReservaException('Datos de la reserva inválidos.');
+        } else if (response.statusCode == 401) {
+          throw const ReservaException('No autorizado. Por favor, inicia sesión.');
+        } else if (response.statusCode == 403) {
+          throw const ReservaException('No tienes permiso para crear reservas.');
+        } else if (response.statusCode == 409) {
+          throw const ReservaException('Ya existe una reserva en ese horario.');
+        } else if (response.statusCode == 422) {
+          throw const ReservaException('Horario inválido. La hora de fin debe ser posterior a la hora de inicio.');
+        } else {
+          throw ReservaException('Error del servidor (${response.statusCode}).');
         }
-      
-        
-    
-    }catch(e){
-      throw Exception("Error al crear reserva: $e");
+    } on ReservaException {
+      rethrow;
+    } on SocketException {
+      throw const ReservaException('No se pudo conectar al servidor. Verifica tu conexión.');
+    } catch (e) {
+      throw ReservaException('Error inesperado: $e');
     }
-  
   }
   
   @override
@@ -93,11 +113,23 @@ class ReservaService implements ReservaInterface {
       },
     );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception("Error al eliminar la reserva: statusCode ${response.statusCode}");
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw const ReservaException('No autorizado. Por favor, inicia sesión.');
+    } else if (response.statusCode == 403) {
+      throw const ReservaException('No tienes permiso para eliminar esta reserva.');
+    } else if (response.statusCode == 404) {
+      throw const ReservaException('Reserva no encontrada.');
+    } else {
+      throw ReservaException('Error del servidor (${response.statusCode}).');
     }
+  } on ReservaException {
+    rethrow;
+  } on SocketException {
+    throw const ReservaException('No se pudo conectar al servidor. Verifica tu conexión.');
   } catch (e) {
-    throw Exception("Error al eliminar la reserva: $e");
+    throw ReservaException('Error inesperado: $e');
   }
   }
   
@@ -117,13 +149,23 @@ class ReservaService implements ReservaInterface {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return ReservaResponse.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 400) {
+      throw const ReservaException('Datos de la reserva inválidos.');
+    } else if (response.statusCode == 401) {
+      throw const ReservaException('No autorizado. Por favor, inicia sesión.');
+    } else if (response.statusCode == 403) {
+      throw const ReservaException('No tienes permiso para modificar esta reserva.');
+    } else if (response.statusCode == 404) {
+      throw const ReservaException('Reserva no encontrada.');
     } else {
-      final errorBody = jsonDecode(response.body);
-      throw Exception(
-          "Error al actualizar la reserva: ${errorBody['message'] ?? 'Error desconocido'}");
+      throw ReservaException('Error del servidor (${response.statusCode}).');
     }
+  } on ReservaException {
+    rethrow;
+  } on SocketException {
+    throw const ReservaException('No se pudo conectar al servidor. Verifica tu conexión.');
   } catch (e) {
-    throw Exception("Error al actualizar la reserva: $e");
+    throw ReservaException('Error inesperado: $e');
   }
 
   }
